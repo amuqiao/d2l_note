@@ -228,8 +228,9 @@ class Predictor:
             max_probs, _ = torch.max(probabilities, dim=1)
             max_probs = max_probs.cpu().tolist()
         
-        print(f"预测类别: {random_preds.tolist()}")
-        print(f"预测标签: {random_labels}")
+        # 按照visualize_prediction的格式输出预测详情
+        print(f"\n📋 随机输入预测详情:")
+        print(f"预测类别: {random_preds.tolist()} → {random_labels}")
         print(f"预测置信度: {[f'{p:.2f}' for p in max_probs]}")
         
         # 识别高置信度预测（置信度>0.5）
