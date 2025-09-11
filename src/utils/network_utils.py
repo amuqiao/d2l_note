@@ -63,33 +63,3 @@ class NetworkUtils:
             if isinstance(module, (nn.BatchNorm1d, nn.BatchNorm2d, nn.BatchNorm3d)):
                 return True
         return False
-    
-    @staticmethod
-    def test_lenet_shape(net, input_size=(1, 1, 28, 28)):
-        """专门用于测试LeNet系列模型的网络形状"""
-        NetworkUtils.test_network_shape(net, input_size)
-    
-    @staticmethod
-    def test_alexnet_shape(net, input_size=(1, 1, 224, 224)):
-        """专门用于测试AlexNet模型的网络形状"""
-        NetworkUtils.test_network_shape(net, input_size)
-    
-    @staticmethod
-    def test_vgg_shape(net, input_size=(1, 1, 224, 224)):
-        """专门用于测试VGG模型的网络形状"""
-        NetworkUtils.test_network_shape(net, input_size)
-    
-    @staticmethod
-    def test_nin_shape(net, input_size=(1, 1, 224, 224)):
-        """专门用于测试NIN模型的网络形状"""
-        NetworkUtils.test_network_shape(net, input_size)
-    
-    @staticmethod
-    def test_googlenet_shape(net, input_size=(1, 1, 96, 96)):
-        """专门用于测试GoogLeNet模型的网络形状"""
-        NetworkUtils.test_network_shape(net, input_size)
-    
-    @staticmethod
-    def test_resnet_shape(net, input_size=(1, 1, 224, 224)):
-        """专门用于测试ResNet模型的网络形状"""
-        NetworkUtils.test_network_shape(net, input_size)
