@@ -186,8 +186,10 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
         # 2. 根据模型类型确定resize参数
         resize = None  # 默认LeNet不需要resize
         if predictor.config and "model_name" in predictor.config:
-            if predictor.config["model_name"] == "AlexNet":
-                resize = 224  # AlexNet需要224x224输入
+            if predictor.config["model_name"] == "AlexNet" or predictor.config["model_name"] == "VGG":
+                resize = 224  # AlexNet和VGG都需要224x224输入
+            elif predictor.config["model_name"] == "GoogLeNet":
+                resize = 96   # GoogLeNet需要96x96输入
 
         # 3. 加载数据（使用正确的resize参数）
         _, test_iter = DataLoader.load_data(
@@ -195,7 +197,7 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
         )
 
         # 4. 执行预测可视化
-        # predictor.visualize_prediction(test_iter, n=kwargs.get("n", 8))
+        predictor.visualize_prediction(test_iter, n=kwargs.get("n", 8))
         predictor.test_random_input(num_samples=10)
 
     else:
@@ -278,7 +280,7 @@ if __name__ == "__main__":
                         help='训练目录的根目录路径，默认为执行脚本的目录（当前工作目录）')
     
     # 预测模式参数
-    parser.add_argument('--run_dir', type=str, default=None,
+    parser.add_argument('--run_dir', type=str, default="data/run_20250909_204054",
                         help='训练目录路径（推荐方式）')
     parser.add_argument('--model_file', type=str, default=None,
                         help='可选，指定要加载的模型文件名，不指定则自动加载该目录下的最佳模型')
@@ -317,7 +319,7 @@ if __name__ == "__main__":
             'model_file': args.model_file,
             'model_path': args.model_path,
             'n': args.n,
-            'batch_size': args.batch_size,
+            'batch_size': args.batch_size if args.batch_size is not None else 256,  # 默认批次大小为256
             'root_dir': args.root_dir
         })
     
