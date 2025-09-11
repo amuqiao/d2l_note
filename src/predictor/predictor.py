@@ -8,7 +8,8 @@ from src.models.alexnet import AlexNet
 from src.models.vgg import VGG
 from src.models.nin import NIN
 from src.models.googlenet import GoogLeNet
-from src.utils.toolkit import Toolkit
+from src.utils.file_utils import FileUtils
+from src.utils.visualization import VisualizationTool
 
 # ========================= 模型预测类 =========================
 class Predictor:
@@ -49,7 +50,7 @@ class Predictor:
                 raise FileNotFoundError(f"指定的模型文件不存在: {model_path}")
         else:
             # 自动选择最佳模型文件
-            model_file = Toolkit.find_best_model_in_dir(run_dir)
+            model_file = FileUtils.find_best_model_in_dir(run_dir)
             model_path = os.path.join(run_dir, model_file)
             
         # 3. 复用from_model_path方法加载模型和配置
@@ -182,7 +183,7 @@ class Predictor:
         X_reshaped = X.reshape((n, image_size, image_size))
 
         # 使用增强版的show_images方法显示图像
-        Toolkit.show_images(
+        VisualizationTool.show_images(
             X_reshaped,
             num_rows=1,
             num_cols=n,
@@ -214,8 +215,21 @@ class Predictor:
         random_preds = self.predict(random_X)
         random_labels = d2l.get_fashion_mnist_labels(random_preds.cpu())
 
+        # 获取模型输出概率分布
+        with torch.no_grad():
+            random_X = random_X.to(self.device)
+            outputs = self.net(random_X)
+            probabilities = torch.nn.functional.softmax(outputs, dim=1)
+            max_probs, _ = torch.max(probabilities, dim=1)
+            max_probs = max_probs.cpu().tolist()
+        
         print(f"预测类别: {random_preds.tolist()}")
         print(f"预测标签: {random_labels}")
+        print(f"预测置信度: {[f'{p:.2f}' for p in max_probs]}")
+        
+        # 识别高置信度预测（置信度>0.5）
+        high_confidence_count = sum(1 for p in max_probs if p > 0.5)
+        print(f"高置信度预测({high_confidence_count}/{num_samples}): 置信度>0.5")
 
         # 检查预测多样性（避免模型输出单一类别）
         unique_preds = torch.unique(random_preds).numel()

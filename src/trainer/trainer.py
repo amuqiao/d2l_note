@@ -4,7 +4,8 @@ from d2l import torch as d2l
 import os
 import re
 import datetime
-from src.utils.toolkit import Toolkit, AnimatorTool
+from src.utils.visualization import VisualizationTool
+from src.utils.file_utils import FileUtils
 
 # ========================= 模型训练类 =========================
 class Trainer:
@@ -130,7 +131,7 @@ class Trainer:
         # 1. 初始化训练目录和配置
         # 从kwargs中获取root_dir参数，如果没有则使用None（默认为当前工作目录）
         root_dir = kwargs.get('root_dir', None)
-        self.run_dir = Toolkit.create_run_dir(root_dir=root_dir)
+        self.run_dir = FileUtils.create_run_dir(root_dir=root_dir)
         train_config = {
             "model_name": self.net.__class__.__name__,
             "device": str(self.device),
@@ -141,7 +142,7 @@ class Trainer:
             "train_samples": len(train_iter) * batch_size,
             "test_samples": len(test_iter) * batch_size,
         }
-        Toolkit.save_config(train_config, os.path.join(self.run_dir, "config.json"))
+        FileUtils.save_config(train_config, os.path.join(self.run_dir, "config.json"))
 
         # 2. 初始化训练组件
 
@@ -151,7 +152,7 @@ class Trainer:
         loss_fn = nn.CrossEntropyLoss()
         animator = None
         if enable_visualization:
-            animator = AnimatorTool.create_animator(
+            animator = VisualizationTool.create_animator(
                 xlabel="迭代周期", xlim=[1, num_epochs]
             )
         timer = d2l.Timer()
@@ -187,7 +188,7 @@ class Trainer:
                 if enable_visualization and (
                     (i + 1) % (num_batches // 5) == 0 or i == num_batches - 1
                 ):
-                    AnimatorTool.update_realtime(
+                    VisualizationTool.update_realtime(
                         animator,
                         epoch + (i + 1) / num_batches,
                         (train_loss, train_acc, None),
@@ -196,7 +197,7 @@ class Trainer:
             # 4. 每轮次评估+保存模型
             test_acc = self.evaluate_accuracy(test_iter)
             if enable_visualization:
-                AnimatorTool.update_realtime(
+                VisualizationTool.update_realtime(
                     animator, epoch + 1, (None, None, test_acc)
                 )
             self._save_best_model(epoch, test_acc)
@@ -218,7 +219,7 @@ class Trainer:
 
             # 每轮次保存epoch指标到临时文件（防止训练中断数据丢失）
             epoch_metrics_path = os.path.join(self.run_dir, "epoch_metrics.json")
-            Toolkit.save_metrics(epoch_metrics, epoch_metrics_path)
+            FileUtils.save_metrics(epoch_metrics, epoch_metrics_path)
 
         # 5. 训练结束：保存最终指标（包含完整的epoch指标历史）
         total_time = timer.sum()
@@ -231,7 +232,7 @@ class Trainer:
             "samples_per_second": f"{self.total_samples / total_time:.1f}",
             "epoch_metrics": epoch_metrics,  # 包含完整的每轮指标历史
         }
-        Toolkit.save_metrics(final_metrics, os.path.join(self.run_dir, "metrics.json"))
+        FileUtils.save_metrics(final_metrics, os.path.join(self.run_dir, "metrics.json"))
 
         # 6. 输出训练总结
         print("\n" + "=" * 80)

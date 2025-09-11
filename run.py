@@ -10,7 +10,9 @@ import json
 import datetime
 import re
 import argparse
-from src.utils.toolkit import Toolkit,AnimatorTool
+from src.utils.visualization import VisualizationTool
+from src.utils.file_utils import FileUtils
+from src.utils.network_utils import NetworkUtils
 from src.predictor.predictor import Predictor
 from src.data.data_loader import DataLoader
 from src.trainer.trainer import Trainer
@@ -36,7 +38,7 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
         kwargs: 模式参数（如train的num_epochs、lr等）
     """
     # 初始化字体
-    Toolkit.setup_font()
+    VisualizationTool.setup_font()
 
     if mode == "train":
         # 训练模式：直接使用传入的参数（call_args已处理默认值）
@@ -62,7 +64,7 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
             raise ValueError(f"不支持的模型类型: {model_type}")
 
         # 测试网络结构
-        Toolkit.test_network_shape(net, input_size=input_size)
+        NetworkUtils.test_network_shape(net, input_size=input_size)
 
         # 2. 加载数据
         print(f"📥 加载Fashion-MNIST（batch_size={batch_size}, resize={resize}）")
@@ -163,7 +165,7 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
             # 如果指定了目录但未指定模型文件，显示该目录下的所有模型信息
             if not model_file:
                 try:
-                    models_info = Toolkit.list_models_in_dir(run_dir)
+                    models_info = FileUtils.list_models_in_dir(run_dir)
                     print(f"\n📋 {run_dir} 目录中的模型列表（按准确率排序）:")
                     print(f"{'序号':<4} {'文件名':<60} {'准确率':<10} {'轮次':<6}")
                     print("-" * 80)
