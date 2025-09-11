@@ -62,87 +62,111 @@ class BatchTrainer:
     
     def train_model(self, model_name: str, config: Dict[str, Any]) -> Dict[str, Any]:
         """
-        训练单个模型
+        训练单个模型，包含完整的异常处理机制
         
         Args:
             model_name: 模型名称
             config: 训练配置参数
         
         Returns:
-            训练结果字典
+            训练结果字典（包含成功/失败状态和详细信息）
         """
         print(f"\n{'='*60}")
         print(f"🚀 开始训练模型: {model_name}")
         print(f"{'='*60}")
         
         start_time = time.time()
+        result = {
+            "model_name": model_name,
+            "best_accuracy": 0.0,
+            "training_time": 0,
+            "error": None,
+            "config": config,
+            "success": False
+        }
         
         try:
             # 1. 创建模型
-            net = ModelRegistry.create_model(model_name)
+            try:
+                net = ModelRegistry.create_model(model_name)
+                print(f"🔧 模型 {model_name} 创建成功")
+            except Exception as e:
+                raise RuntimeError(f"模型创建失败: {str(e)}")
             
             # 2. 测试网络结构
-            test_func = ModelRegistry.get_test_func(model_name)
-            test_func(net, input_size=config["input_size"])
+            try:
+                test_func = ModelRegistry.get_test_func(model_name)
+                test_func(net, input_size=config["input_size"])
+                print(f"✅ 模型 {model_name} 网络结构测试通过")
+            except Exception as e:
+                raise RuntimeError(f"模型结构测试失败: {str(e)}")
             
             # 3. 加载数据
-            print(f"📥 加载Fashion-MNIST数据（batch_size={config['batch_size']}, resize={config['resize']}）")
-            train_iter, test_iter = DataLoader.load_data(
-                batch_size=config["batch_size"], 
-                resize=config["resize"]
-            )
+            try:
+                print(f"📥 加载Fashion-MNIST数据（batch_size={config['batch_size']}, resize={config['resize']}）")
+                train_iter, test_iter = DataLoader.load_data(
+                    batch_size=config["batch_size"], 
+                    resize=config["resize"]
+                )
+                print(f"📊 数据加载完成")
+            except Exception as e:
+                raise RuntimeError(f"数据加载失败: {str(e)}")
             
             # 4. 创建训练器
-            trainer = Trainer(
-                net, 
-                save_every_epoch=config.get("save_every_epoch", False)
-                # 移除构造函数中的enable_visualization参数
-            )
+            try:
+                trainer = Trainer(
+                    net, 
+                    save_every_epoch=config.get("save_every_epoch", False)
+                )
+                print(f"🏋️  训练器创建成功")
+            except Exception as e:
+                raise RuntimeError(f"训练器初始化失败: {str(e)}")
             
             # 5. 训练模型
-            run_dir, best_acc = trainer.train(
-                train_iter=train_iter,
-                test_iter=test_iter,
-                num_epochs=config["num_epochs"],
-                lr=config["lr"],
-                batch_size=config["batch_size"],
-                enable_visualization=config.get("enable_visualization", False)  # 在train方法中传入
-            )
+            try:
+                run_dir, best_acc = trainer.train(
+                    train_iter=train_iter,
+                    test_iter=test_iter,
+                    num_epochs=config["num_epochs"],
+                    lr=config["lr"],
+                    batch_size=config["batch_size"],
+                    enable_visualization=config.get("enable_visualization", False)
+                )
+            except Exception as e:
+                raise RuntimeError(f"模型训练过程失败: {str(e)}")
             
             # 计算训练时间
             training_time = time.time() - start_time
             
-            result = {
-                "model_name": model_name,
+            result.update({
                 "best_accuracy": best_acc,
                 "training_time": training_time,
                 "run_dir": run_dir,
-                "config": config,
                 "success": True
-            }
+            })
             
             print(f"🎉 {model_name} 训练完成！最佳准确率: {best_acc:.4f}，耗时: {training_time:.2f}秒")
             print(f"📁 训练结果保存目录: {run_dir}")
             
         except Exception as e:
-            # 记录训练失败的情况
+            # 记录训练失败的情况，确保捕获所有异常
             training_time = time.time() - start_time
-            result = {
-                "model_name": model_name,
-                "best_accuracy": 0.0,
+            error_msg = f"{type(e).__name__}: {str(e)}"
+            result.update({
                 "training_time": training_time,
-                "error": str(e),
-                "config": config,
+                "error": error_msg,
                 "success": False
-            }
+            })
             
-            print(f"❌ {model_name} 训练失败！错误: {str(e)}")
+            print(f"❌ {model_name} 训练失败！")
+            print(f"💬 错误类型: {type(e).__name__}")
+            print(f"📝 错误详情: {str(e)}")
         
         self.results.append(result)
         return result
     
     def train_all_models(self) -> List[Dict[str, Any]]:
-        """训练所有已注册的模型"""
+        """训练所有已注册的模型，确保单个模型失败不影响整体流程"""
         models_to_train = self.get_all_registered_models()
         
         if not models_to_train:
@@ -153,9 +177,29 @@ class BatchTrainer:
         
         total_start_time = time.time()
         
-        for model_name in models_to_train:
-            config = self.get_model_config(model_name)
-            self.train_model(model_name, config)
+        # 确保每个模型的训练过程都被独立保护，防止一个模型的异常影响整个循环
+        for idx, model_name in enumerate(models_to_train, 1):
+            try:
+                print(f"\n📌 开始训练第 {idx}/{len(models_to_train)} 个模型: {model_name}")
+                config = self.get_model_config(model_name)
+                self.train_model(model_name, config)
+                print(f"✅ 模型 {model_name} 训练处理完成")
+            except Exception as e:
+                # 这是额外的安全保障，防止train_model内部的异常处理失效
+                print(f"❌ 模型 {model_name} 训练过程出现严重错误！")
+                print(f"💬 错误详情: {str(e)}")
+                
+                # 记录这个严重错误
+                self.results.append({
+                    "model_name": model_name,
+                    "best_accuracy": 0.0,
+                    "training_time": 0,
+                    "error": f"严重异常: {str(e)}",
+                    "config": config if 'config' in locals() else {},
+                    "success": False
+                })
+                
+                print(f"🔄 继续训练下一个模型...")
         
         total_time = time.time() - total_start_time
         print(f"\n{'='*60}")
@@ -182,7 +226,7 @@ class BatchTrainer:
         return output_file
     
     def print_summary(self):
-        """打印训练结果摘要"""
+        """打印训练结果摘要，增强失败模型的信息展示"""
         if not self.results:
             print("⚠️ 没有训练结果可显示！")
             return
@@ -193,19 +237,38 @@ class BatchTrainer:
         print(f"{'模型名称':<15} {'最佳准确率':<12} {'训练时间(秒)':<12} {'状态'}")
         print(f"{'-'*60}")
         
+        # 分开统计成功和失败的模型
+        successful_models = []
+        failed_models = []
+        
         for result in self.results:
             status = "✅ 成功" if result["success"] else "❌ 失败"
             print(f"{result['model_name']:<15} {result['best_accuracy']:.4f}       {result['training_time']:.2f}         {status}")
+            
+            if result["success"]:
+                successful_models.append(result)
+            else:
+                failed_models.append(result)
         
         # 统计成功和失败的数量
-        success_count = sum(1 for r in self.results if r["success"])
-        fail_count = len(self.results) - success_count
+        success_count = len(successful_models)
+        fail_count = len(failed_models)
         
         print(f"{'-'*60}")
         print(f"总计: {success_count}个成功, {fail_count}个失败")
         if success_count > 0:
-            avg_accuracy = sum(r["best_accuracy"] for r in self.results if r["success"]) / success_count
+            avg_accuracy = sum(r["best_accuracy"] for r in successful_models) / success_count
             print(f"平均准确率: {avg_accuracy:.4f}")
+        
+        # 显示失败模型的详细错误信息
+        if failed_models:
+            print(f"\n{'='*60}")
+            print("❌ 失败模型详情")
+            print(f"{'='*60}")
+            for failed_model in failed_models:
+                print(f"\n模型名称: {failed_model['model_name']}")
+                print(f"错误信息: {failed_model.get('error', '未知错误')}")
+                print(f"{'='*60}")
         
         print(f"{'='*60}")
 
@@ -299,9 +362,21 @@ def main():
     # 如果指定了模型列表，只训练这些模型
     if args.models:
         valid_models = [m for m in args.models if ModelRegistry.is_registered(m)]
-        for model_name in valid_models:
-            config = batch_trainer.get_model_config(model_name)
-            batch_trainer.train_model(model_name, config)
+        if not valid_models:
+            print(f"❌ 没有找到有效的模型！请检查 --models 参数")
+        else:
+            print(f"📋 开始训练指定的 {len(valid_models)} 个模型")
+            # 确保单个模型失败不影响整个批量训练过程
+            for idx, model_name in enumerate(valid_models, 1):
+                try:
+                    print(f"\n📌 开始训练第 {idx}/{len(valid_models)} 个模型: {model_name}")
+                    config = batch_trainer.get_model_config(model_name)
+                    batch_trainer.train_model(model_name, config)
+                except Exception as e:
+                    # 额外的安全保障层
+                    print(f"❌ 模型 {model_name} 处理过程出现严重错误！")
+                    print(f"💬 错误详情: {str(e)}")
+                    print(f"🔄 继续训练下一个模型...")
     else:
         # 训练所有模型
         batch_trainer.train_all_models()
