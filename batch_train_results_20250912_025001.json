@@ -1,0 +1,173 @@
+[
+  {
+    "model_name": "LeNet",
+    "best_accuracy": 0.0,
+    "training_time": 0.04700636863708496,
+    "error": "__init__() got an unexpected keyword argument 'enable_visualization'",
+    "config": {
+      "input_size": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "resize": null,
+      "lr": 0.8,
+      "batch_size": 256,
+      "num_epochs": 10
+    },
+    "success": false
+  },
+  {
+    "model_name": "LeNetBatchNorm",
+    "best_accuracy": 0.0,
+    "training_time": 0.04669547080993652,
+    "error": "__init__() got an unexpected keyword argument 'enable_visualization'",
+    "config": {
+      "input_size": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "resize": null,
+      "lr": 1.0,
+      "batch_size": 256,
+      "num_epochs": 10
+    },
+    "success": false
+  },
+  {
+    "model_name": "AlexNet",
+    "best_accuracy": 0.0,
+    "training_time": 0.19504547119140625,
+    "error": "__init__() got an unexpected keyword argument 'enable_visualization'",
+    "config": {
+      "input_size": [
+        1,
+        1,
+        224,
+        224
+      ],
+      "resize": 224,
+      "lr": 0.01,
+      "batch_size": 128,
+      "num_epochs": 30
+    },
+    "success": false
+  },
+  {
+    "model_name": "VGG",
+    "best_accuracy": 0.0,
+    "training_time": 0.17048001289367676,
+    "error": "__init__() got an unexpected keyword argument 'enable_visualization'",
+    "config": {
+      "input_size": [
+        1,
+        1,
+        224,
+        224
+      ],
+      "resize": 224,
+      "lr": 0.05,
+      "batch_size": 128,
+      "num_epochs": 10
+    },
+    "success": false
+  },
+  {
+    "model_name": "NIN",
+    "best_accuracy": 0.0,
+    "training_time": 0.06533193588256836,
+    "error": "__init__() got an unexpected keyword argument 'enable_visualization'",
+    "config": {
+      "input_size": [
+        1,
+        1,
+        224,
+        224
+      ],
+      "resize": 224,
+      "lr": 0.1,
+      "batch_size": 128,
+      "num_epochs": 10
+    },
+    "success": false
+  },
+  {
+    "model_name": "GoogLeNet",
+    "best_accuracy": 0.0,
+    "training_time": 0.09131503105163574,
+    "error": "__init__() got an unexpected keyword argument 'enable_visualization'",
+    "config": {
+      "input_size": [
+        1,
+        1,
+        96,
+        96
+      ],
+      "resize": 96,
+      "lr": 0.1,
+      "batch_size": 128,
+      "num_epochs": 20
+    },
+    "success": false
+  },
+  {
+    "model_name": "ResNet",
+    "best_accuracy": 0.0,
+    "training_time": 0.12201714515686035,
+    "error": "__init__() got an unexpected keyword argument 'enable_visualization'",
+    "config": {
+      "input_size": [
+        1,
+        1,
+        224,
+        224
+      ],
+      "resize": 224,
+      "lr": 0.05,
+      "batch_size": 128,
+      "num_epochs": 10
+    },
+    "success": false
+  },
+  {
+    "model_name": "DenseNet",
+    "best_accuracy": 0.0,
+    "training_time": 0.07048916816711426,
+    "error": "__init__() got an unexpected keyword argument 'enable_visualization'",
+    "config": {
+      "input_size": [
+        1,
+        1,
+        96,
+        96
+      ],
+      "resize": 96,
+      "lr": 0.1,
+      "batch_size": 256,
+      "num_epochs": 10
+    },
+    "success": false
+  },
+  {
+    "model_name": "MLP",
+    "best_accuracy": 0.0,
+    "training_time": 0.04402041435241699,
+    "error": "__init__() got an unexpected keyword argument 'enable_visualization'",
+    "config": {
+      "input_size": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "resize": null,
+      "lr": 0.5,
+      "batch_size": 256,
+      "num_epochs": 10
+    },
+    "success": false
+  }
+]

@@ -1,0 +1,317 @@
+import os
+import sys
+import time
+import json
+import datetime
+import argparse
+import torch
+from typing import List, Dict, Any, Optional
+
+# 解决OpenMP运行时库冲突问题
+os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+# 添加项目根目录到Python路径
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
+from src.utils.model_registry import ModelRegistry
+from src.trainer.trainer import Trainer
+from src.utils.data_utils import DataLoader
+from src.utils.visualization import VisualizationTool
+
+class BatchTrainer:
+    """批量训练工具类：用于批量训练所有已注册的模型"""
+    
+    def __init__(self, configs: Dict[str, Dict[str, Any]] = None, skip_models: List[str] = None):
+        """
+        初始化批量训练器
+        
+        Args:
+            configs: 可选的模型配置字典，键为模型名称，值为配置参数
+            skip_models: 可选的跳过的模型名称列表
+        """
+        self.configs = configs or {}
+        self.skip_models = skip_models or []
+        self.results = []
+        
+        # 设置中文字体
+        VisualizationTool.setup_font()
+    
+    def get_all_registered_models(self) -> List[str]:
+        """获取所有已注册且未被跳过的模型"""
+        all_models = ModelRegistry.list_models()
+        return [model for model in all_models if model not in self.skip_models]
+    
+    def get_model_config(self, model_name: str) -> Dict[str, Any]:
+        """获取模型的配置参数"""
+        # 如果用户提供了配置，使用用户的配置
+        if model_name in self.configs:
+            return self.configs[model_name]
+        
+        # 否则使用模型注册中心的默认配置
+        try:
+            return ModelRegistry.get_config(model_name)
+        except ValueError:
+            # 如果没有默认配置，返回一个基础配置
+            return {
+                "num_epochs": 10,
+                "lr": 0.01,
+                "batch_size": 128,
+                "resize": None,
+                "input_size": (1, 1, 28, 28)  # 默认LeNet尺寸
+            }
+    
+    def train_model(self, model_name: str, config: Dict[str, Any]) -> Dict[str, Any]:
+        """
+        训练单个模型
+        
+        Args:
+            model_name: 模型名称
+            config: 训练配置参数
+        
+        Returns:
+            训练结果字典
+        """
+        print(f"\n{'='*60}")
+        print(f"🚀 开始训练模型: {model_name}")
+        print(f"{'='*60}")
+        
+        start_time = time.time()
+        
+        try:
+            # 1. 创建模型
+            net = ModelRegistry.create_model(model_name)
+            
+            # 2. 测试网络结构
+            test_func = ModelRegistry.get_test_func(model_name)
+            test_func(net, input_size=config["input_size"])
+            
+            # 3. 加载数据
+            print(f"📥 加载Fashion-MNIST数据（batch_size={config['batch_size']}, resize={config['resize']}）")
+            train_iter, test_iter = DataLoader.load_data(
+                batch_size=config["batch_size"], 
+                resize=config["resize"]
+            )
+            
+            # 4. 创建训练器
+            trainer = Trainer(
+                net, 
+                save_every_epoch=config.get("save_every_epoch", False)
+                # 移除构造函数中的enable_visualization参数
+            )
+            
+            # 5. 训练模型
+            run_dir, best_acc = trainer.train(
+                train_iter=train_iter,
+                test_iter=test_iter,
+                num_epochs=config["num_epochs"],
+                lr=config["lr"],
+                batch_size=config["batch_size"],
+                enable_visualization=config.get("enable_visualization", False)  # 在train方法中传入
+            )
+            
+            # 计算训练时间
+            training_time = time.time() - start_time
+            
+            result = {
+                "model_name": model_name,
+                "best_accuracy": best_acc,
+                "training_time": training_time,
+                "run_dir": run_dir,
+                "config": config,
+                "success": True
+            }
+            
+            print(f"🎉 {model_name} 训练完成！最佳准确率: {best_acc:.4f}，耗时: {training_time:.2f}秒")
+            print(f"📁 训练结果保存目录: {run_dir}")
+            
+        except Exception as e:
+            # 记录训练失败的情况
+            training_time = time.time() - start_time
+            result = {
+                "model_name": model_name,
+                "best_accuracy": 0.0,
+                "training_time": training_time,
+                "error": str(e),
+                "config": config,
+                "success": False
+            }
+            
+            print(f"❌ {model_name} 训练失败！错误: {str(e)}")
+        
+        self.results.append(result)
+        return result
+    
+    def train_all_models(self) -> List[Dict[str, Any]]:
+        """训练所有已注册的模型"""
+        models_to_train = self.get_all_registered_models()
+        
+        if not models_to_train:
+            print("⚠️ 没有找到可训练的模型！")
+            return []
+        
+        print(f"📋 发现 {len(models_to_train)} 个可训练的模型：{', '.join(models_to_train)}")
+        
+        total_start_time = time.time()
+        
+        for model_name in models_to_train:
+            config = self.get_model_config(model_name)
+            self.train_model(model_name, config)
+        
+        total_time = time.time() - total_start_time
+        print(f"\n{'='*60}")
+        print(f"🏁 所有模型训练完成！总计耗时: {total_time:.2f}秒")
+        print(f"{'='*60}")
+        
+        return self.results
+    
+    def save_results(self, output_file: str = None) -> str:
+        """保存训练结果到JSON文件"""
+        if not output_file:
+            timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
+            output_file = f"batch_train_results_{timestamp}.json"
+        
+        # 确保输出目录存在
+        output_dir = os.path.dirname(os.path.abspath(output_file))
+        os.makedirs(output_dir, exist_ok=True)
+        
+        # 保存结果
+        with open(output_file, "w", encoding="utf-8") as f:
+            json.dump(self.results, f, ensure_ascii=False, indent=2)
+        
+        print(f"📊 批量训练结果已保存到: {output_file}")
+        return output_file
+    
+    def print_summary(self):
+        """打印训练结果摘要"""
+        if not self.results:
+            print("⚠️ 没有训练结果可显示！")
+            return
+        
+        print(f"\n{'='*60}")
+        print("📊 批量训练结果摘要")
+        print(f"{'='*60}")
+        print(f"{'模型名称':<15} {'最佳准确率':<12} {'训练时间(秒)':<12} {'状态'}")
+        print(f"{'-'*60}")
+        
+        for result in self.results:
+            status = "✅ 成功" if result["success"] else "❌ 失败"
+            print(f"{result['model_name']:<15} {result['best_accuracy']:.4f}       {result['training_time']:.2f}         {status}")
+        
+        # 统计成功和失败的数量
+        success_count = sum(1 for r in self.results if r["success"])
+        fail_count = len(self.results) - success_count
+        
+        print(f"{'-'*60}")
+        print(f"总计: {success_count}个成功, {fail_count}个失败")
+        if success_count > 0:
+            avg_accuracy = sum(r["best_accuracy"] for r in self.results if r["success"]) / success_count
+            print(f"平均准确率: {avg_accuracy:.4f}")
+        
+        print(f"{'='*60}")
+
+
+def parse_arguments():
+    """解析命令行参数"""
+    parser = argparse.ArgumentParser(description="批量训练深度学习模型工具")
+    
+    parser.add_argument('--models', type=str, nargs='+', default=["LeNet","AlexNet","VGG","NIN","GoogLeNet","ResNet","DenseNet"], help="指定要训练的模型名称列表，如 --models LeNet AlexNet")
+    parser.add_argument('--skip', type=str, nargs='+', help="指定要跳过的模型名称列表，如 --skip VGG ResNet")
+    parser.add_argument('--epochs', type=int, help="所有模型的训练轮数")
+    parser.add_argument('--lr', type=float, help="所有模型的学习率")
+    parser.add_argument('--batch_size', type=int, help="所有模型的批次大小")
+    parser.add_argument('--output', type=str, help="训练结果输出文件路径")
+    parser.add_argument('--enable_visualization', action='store_true', help="启用每个模型的训练可视化")
+    
+    return parser.parse_args()
+
+def main():
+    """主函数入口"""
+    # 导入所有模型并注册
+    # 注意：这些导入会触发模型的自动注册
+    from src.models.lenet import LeNet, LeNetBatchNorm
+    from src.models.alexnet import AlexNet
+    from src.models.vgg import VGG
+    from src.models.nin import NIN
+    from src.models.googlenet import GoogLeNet
+    from src.models.resnet import ResNet
+    from src.models.dense_net import DenseNet
+    from src.models.mlp import MLP
+    
+    # 解析命令行参数
+    args = parse_arguments()
+    
+    # 构建配置字典
+    configs = {}
+    
+    # 如果指定了特定的模型列表，创建这些模型的配置
+    if args.models:
+        for model_name in args.models:
+            if ModelRegistry.is_registered(model_name):
+                try:
+                    config = ModelRegistry.get_config(model_name)
+                    # 应用命令行参数的全局设置
+                    if args.epochs is not None:
+                        config["num_epochs"] = args.epochs
+                    if args.lr is not None:
+                        config["lr"] = args.lr
+                    if args.batch_size is not None:
+                        config["batch_size"] = args.batch_size
+                    if args.enable_visualization:
+                        config["enable_visualization"] = True
+                    
+                    configs[model_name] = config
+                except ValueError:
+                    print(f"⚠️ 模型 '{model_name}' 没有默认配置，使用基础配置")
+                    configs[model_name] = {
+                        "num_epochs": args.epochs or 10,
+                        "lr": args.lr or 0.01,
+                        "batch_size": args.batch_size or 128,
+                        "resize": None,
+                        "input_size": (1, 1, 28, 28),  # 默认尺寸
+                        "enable_visualization": args.enable_visualization
+                    }
+            else:
+                print(f"❌ 模型 '{model_name}' 未注册，跳过")
+    else:
+        # 没有指定模型列表，使用命令行参数更新所有模型的默认配置
+        if any([args.epochs is not None, args.lr is not None, args.batch_size is not None]):
+            all_models = ModelRegistry.list_models()
+            for model_name in all_models:
+                if model_name not in (args.skip or []):
+                    try:
+                        config = ModelRegistry.get_config(model_name)
+                        if args.epochs is not None:
+                            config["num_epochs"] = args.epochs
+                        if args.lr is not None:
+                            config["lr"] = args.lr
+                        if args.batch_size is not None:
+                            config["batch_size"] = args.batch_size
+                        if args.enable_visualization:
+                            config["enable_visualization"] = True
+                        
+                        configs[model_name] = config
+                    except ValueError:
+                        pass  # 跳过没有默认配置的模型
+    
+    # 创建批量训练器并开始训练
+    batch_trainer = BatchTrainer(configs=configs, skip_models=args.skip)
+    
+    # 如果指定了模型列表，只训练这些模型
+    if args.models:
+        valid_models = [m for m in args.models if ModelRegistry.is_registered(m)]
+        for model_name in valid_models:
+            config = batch_trainer.get_model_config(model_name)
+            batch_trainer.train_model(model_name, config)
+    else:
+        # 训练所有模型
+        batch_trainer.train_all_models()
+    
+    # 打印结果摘要
+    batch_trainer.print_summary()
+    
+    # 保存结果到文件
+    output_file = args.output
+    batch_trainer.save_results(output_file)
+
+if __name__ == "__main__":
+    main()

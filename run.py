@@ -193,7 +193,7 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
         )
 
         # 4. 执行预测可视化
-        predictor.visualize_prediction(test_iter, n=kwargs.get("n", 8))
+        # predictor.visualize_prediction(test_iter, n=kwargs.get("n", 8))
         predictor.test_random_input(num_samples=10)
 
     else:
