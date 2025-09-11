@@ -229,7 +229,7 @@ if __name__ == "__main__":
                         help='运行模式: train（训练）或 predict（预测）')
     
     # 训练模式参数
-    parser.add_argument('--model_type', type=str, default='LeNet' if 'LeNet' in registered_models else registered_models[0] if registered_models else 'LeNet', 
+    parser.add_argument('--model_type', type=str, default='AlexNet' if 'AlexNet' in registered_models else registered_models[0] if registered_models else 'LeNet', 
                         choices=registered_models,
                         help=f"模型类型: {', '.join(registered_models)}")
 

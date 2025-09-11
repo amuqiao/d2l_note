@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from src.utils.model_registry import ModelRegistry
+from src.utils.network_utils import NetworkUtils
 
 
 # 定义模型默认配置
@@ -51,3 +52,11 @@ class NIN(nn.Module):
         x = self.features(x)
         x = self.classifier(x)
         return x
+
+
+def test_nin_shape(net, input_size=(1, 1, 224, 224)):
+    """专门用于测试NIN模型的网络形状"""
+    NetworkUtils.test_network_shape(net, input_size)
+
+# 注册模型专用测试函数
+ModelRegistry.register_test_func("NIN", test_nin_shape)

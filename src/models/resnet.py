@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from torch.nn import functional as F
 from src.utils.model_registry import ModelRegistry
+from src.utils.network_utils import NetworkUtils
 
 
 # 定义模型默认配置
@@ -102,6 +103,13 @@ class ResNet(nn.Module):
 
 # 配置已经在文件顶部定义，这里不再重复定义
 
+
+def test_resnet_shape(net, input_size=(1, 1, 224, 224)):
+    """专门用于测试ResNet模型的网络形状"""
+    NetworkUtils.test_network_shape(net, input_size)
+
+# 注册模型专用测试函数
+ModelRegistry.register_test_func("ResNet", test_resnet_shape)
 
 if __name__ == "__main__":
     # 简单测试模型结构

@@ -2,6 +2,7 @@ import torch
 from torch import nn
 import torch.nn.functional as F
 from src.utils.model_registry import ModelRegistry
+from src.utils.network_utils import NetworkUtils
 
 
 # 定义模型默认配置
@@ -102,3 +103,11 @@ class Inception(nn.Module):
         p4 = F.relu(self.p4_2(self.p4_1(x)))
         # 在通道维度上连结输出
         return torch.cat((p1, p2, p3, p4), dim=1)
+
+
+def test_googlenet_shape(net, input_size=(1, 1, 96, 96)):
+    """专门用于测试GoogLeNet模型的网络形状"""
+    NetworkUtils.test_network_shape(net, input_size)
+
+# 注册模型专用测试函数
+ModelRegistry.register_test_func("GoogLeNet", test_googlenet_shape)
