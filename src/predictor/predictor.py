@@ -8,6 +8,7 @@ from src.models.alexnet import AlexNet
 from src.models.vgg import VGG
 from src.models.nin import NIN
 from src.models.googlenet import GoogLeNet
+from src.models.resnet import ResNet
 from src.utils.file_utils import FileUtils
 from src.utils.visualization import VisualizationTool
 
@@ -135,6 +136,8 @@ class Predictor:
                 net = NIN()
             elif model_name == "GoogLeNet":
                 net = GoogLeNet()
+            elif model_name == "ResNet":
+                net = ResNet()
             else:
                 raise ValueError(f"不支持的模型类型: {model_name}")
 

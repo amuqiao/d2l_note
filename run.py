@@ -21,6 +21,7 @@ from src.models.alexnet import AlexNet
 from src.models.vgg import VGG
 from src.models.nin import NIN
 from src.models.googlenet import GoogLeNet
+from src.models.resnet import ResNet
 
 # 解决OpenMP运行时库冲突问题
 # 设置环境变量允许多个OpenMP运行时库共存
@@ -62,6 +63,8 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
             net = NIN()
         elif model_type == "GoogLeNet":
             net = GoogLeNet()
+        elif model_type == "ResNet":
+            net = ResNet()
         else:
             raise ValueError(f"不支持的模型类型: {model_type}")
 
@@ -76,6 +79,8 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
             NetworkUtils.test_nin_shape(net, input_size=input_size)
         elif model_type == "GoogLeNet":
             NetworkUtils.test_googlenet_shape(net, input_size=input_size)
+        elif model_type == "ResNet":
+            NetworkUtils.test_resnet_shape(net, input_size=input_size)
         else:
             # 默认使用通用测试方法
             NetworkUtils.test_network_shape(net, input_size=input_size)
@@ -266,6 +271,13 @@ MODEL_DEFAULT_CONFIGS = {
         "lr": 1,                      # LeNet适合稍高学习率，但BatchNorm可尝试稍低
         "batch_size": 256,              # 较小输入尺寸可支持更大批次
         "num_epochs": 10,                # 带BatchNorm通常收敛更快
+    },
+    "ResNet": {
+        "input_size": (1, 1, 224, 224),
+        "resize": 224,
+        "lr": 0.05,
+        "batch_size": 128,
+        "num_epochs": 10
     }
 }
 
@@ -275,12 +287,12 @@ if __name__ == "__main__":
     
     # 基础参数
     
-    parser.add_argument('--mode', type=str, default='predict', choices=['train', 'predict'],
+    parser.add_argument('--mode', type=str, default='train', choices=['train', 'predict'],
                         help='运行模式: train（训练）或 predict（预测）')
     
     # 训练模式参数
-    parser.add_argument('--model_type', type=str, default='LeNetBatchNorm', choices=['LeNet', 'LeNetBatchNorm', 'AlexNet', 'VGG', 'NIN', 'GoogLeNet'],
-                        help='模型类型: LeNet、LeNetBatchNorm、AlexNet、VGG、NIN或GoogLeNet')
+    parser.add_argument('--model_type', type=str, default='ResNet', choices=['LeNet', 'LeNetBatchNorm', 'AlexNet', 'VGG', 'NIN', 'GoogLeNet', 'ResNet'],
+                        help='模型类型: LeNet、LeNetBatchNorm、AlexNet、VGG、NIN、GoogLeNet或ResNet')
 
     parser.add_argument('--num_epochs', type=int, default=None,
                         help='训练轮次（AlexNet建议10轮）')
