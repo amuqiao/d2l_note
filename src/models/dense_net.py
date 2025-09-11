@@ -1,6 +1,17 @@
 import torch
 from torch import nn
 from d2l import torch as d2l
+from src.utils.model_registry import ModelRegistry
+
+
+# 模型配置
+DENSENET_CONFIGS = {
+    "input_size": (1, 1, 96, 96),  # (batch, channels, height, width)
+    "resize": 96,                    # 加载数据时Resize到96x96
+    "lr": 0.1,                       # 学习率
+    "batch_size": 256,               # 批次大小
+    "num_epochs": 10                 # 训练轮次
+}
 
 
 def conv_block(input_channels, num_channels):
@@ -36,6 +47,7 @@ def transition_block(input_channels, num_channels):
         nn.AvgPool2d(kernel_size=2, stride=2))
 
 
+@ModelRegistry.register_model("DenseNet", config=DENSENET_CONFIGS)
 class DenseNet(nn.Module):
     """DenseNet模型实现"""
 
@@ -79,16 +91,6 @@ class DenseNet(nn.Module):
         x = self.features(x)
         x = self.classifier(x)
         return x
-
-
-# 模型配置
-DENSENET_CONFIGS = {
-    "input_size": (1, 1, 96, 96),  # (batch, channels, height, width)
-    "resize": 96,                    # 加载数据时Resize到96x96
-    "lr": 0.1,                       # 学习率
-    "batch_size": 256,               # 批次大小
-    "num_epochs": 10                 # 训练轮次
-}
 
 
 if __name__ == "__main__":

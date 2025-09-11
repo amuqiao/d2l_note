@@ -13,15 +13,20 @@ import argparse
 from src.utils.visualization import VisualizationTool
 from src.utils.file_utils import FileUtils
 from src.utils.network_utils import NetworkUtils
+from src.utils.model_registry import ModelRegistry
 from src.predictor.predictor import Predictor
 from src.utils.data_utils import DataLoader
 from src.trainer.trainer import Trainer
+
+# 导入模型并注册
 from src.models.lenet import LeNet, LeNetBatchNorm
 from src.models.alexnet import AlexNet
 from src.models.vgg import VGG
 from src.models.nin import NIN
 from src.models.googlenet import GoogLeNet
 from src.models.resnet import ResNet
+from src.models.dense_net import DenseNet  # 使用装饰器自动注册的模型
+from src.models.mlp import MLP  # 使用装饰器自动注册的模型
 
 # 解决OpenMP运行时库冲突问题
 # 设置环境变量允许多个OpenMP运行时库共存
@@ -43,47 +48,19 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
 
     if mode == "train":
         # 训练模式：直接使用传入的参数（call_args已处理默认值）
-        model_type = kwargs.get("model_type")  # 默认使用VGG
+        model_type = kwargs.get("model_type")  # 默认使用ResNet
         num_epochs = kwargs.get("num_epochs")
         lr = kwargs.get("lr")
         batch_size = kwargs.get("batch_size")
         input_size = kwargs.get("input_size")
         resize = kwargs.get("resize")
 
-        # 1. 创建模型
-        if model_type == "LeNet":
-            net = LeNet()
-        elif model_type == "LeNetBatchNorm":
-            net = LeNetBatchNorm()
-        elif model_type == "AlexNet":
-            net = AlexNet()
-        elif model_type == "VGG":
-            net = VGG()
-        elif model_type == "NIN":
-            net = NIN()
-        elif model_type == "GoogLeNet":
-            net = GoogLeNet()
-        elif model_type == "ResNet":
-            net = ResNet()
-        else:
-            raise ValueError(f"不支持的模型类型: {model_type}")
+        # 1. 创建模型（使用模型注册中心）
+        net = ModelRegistry.create_model(model_type)
 
-        # 测试网络结构
-        if model_type == "LeNet" or model_type == "LeNetBatchNorm":
-            NetworkUtils.test_lenet_shape(net, input_size=input_size)
-        elif model_type == "AlexNet":
-            NetworkUtils.test_alexnet_shape(net, input_size=input_size)
-        elif model_type == "VGG":
-            NetworkUtils.test_vgg_shape(net, input_size=input_size)
-        elif model_type == "NIN":
-            NetworkUtils.test_nin_shape(net, input_size=input_size)
-        elif model_type == "GoogLeNet":
-            NetworkUtils.test_googlenet_shape(net, input_size=input_size)
-        elif model_type == "ResNet":
-            NetworkUtils.test_resnet_shape(net, input_size=input_size)
-        else:
-            # 默认使用通用测试方法
-            NetworkUtils.test_network_shape(net, input_size=input_size)
+        # 2. 测试网络结构（使用模型注册中心的测试函数）
+        test_func = ModelRegistry.get_test_func(model_type)
+        test_func(net, input_size=input_size)
 
         # 2. 加载数据
         print(f"📥 加载Fashion-MNIST（batch_size={batch_size}, resize={resize}）")
@@ -226,64 +203,79 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
 # ========================= 运行入口 =========================
 import argparse
 
-# ========================= 模型默认配置 =========================
-# 键：模型名称（与代码中model_type对应）
-# 值：该模型的默认参数（输入尺寸、Resize、学习率、批次大小、训练轮次等）
-MODEL_DEFAULT_CONFIGS = {
-    "LeNet": {
-        "input_size": (1, 1, 28, 28),  # (batch, channels, height, width)
-        "resize": None,                # Fashion-MNIST原始尺寸28x28，无需Resize
-        "lr": 0.8,                     # LeNet适合稍高学习率
-        "batch_size": 256,             # 较小输入尺寸可支持更大批次
-        "num_epochs": 3,              # 收敛较快，15轮足够
-    },
-    "AlexNet": {
-        "input_size": (1, 1, 224, 224),# AlexNet需要224x224输入
-        "resize": 224,                 # 加载数据时Resize到224x224
-        "lr": 0.01,                    # 较大模型需较低学习率避免震荡
-        "batch_size": 128,             # 224x224输入占用显存较高，批次减小
-        "num_epochs": 30,              # 训练较慢，10轮平衡效果与时间
-    },
-    "VGG": {
-        "input_size": (1, 1, 224, 224),# VGG同样需要224x224输入
-        "resize": 224,
-        "lr": 0.05,                   # 更深模型需更低学习率
-        "batch_size": 128,              # VGG参数量大，显存占用更高
-        "num_epochs": 10,               # 训练耗时久，8轮兼顾效果
-    },
-    "NIN": {
-        "input_size": (1, 1, 224, 224), # NIN需要224x224输入
-        "resize": 224,                  # 加载数据时Resize到224x224
-        "lr": 0.1,                      # 参考note.py中的设置
-        "batch_size": 128,              # 参考note.py中的设置
-        "num_epochs": 10,               # 参考note.py中的设置
-    },
-    "GoogLeNet": {
-        "input_size": (1, 1, 96, 96),   # GoogLeNet需要96x96输入
-        "resize": 96,                   # 加载数据时Resize到96x96
-        "lr": 0.1,                      # 参考note.py中的设置
-        "batch_size": 128,              # 参考note.py中的设置
-        "num_epochs": 20,               # 参考note.py中的设置
-    },
-    "LeNetBatchNorm": {
-        "input_size": (1, 1, 28, 28),   # 与原始LeNet相同的输入尺寸
-        "resize": None,                 # Fashion-MNIST原始尺寸28x28，无需Resize
-        "lr": 1,                      # LeNet适合稍高学习率，但BatchNorm可尝试稍低
-        "batch_size": 256,              # 较小输入尺寸可支持更大批次
-        "num_epochs": 10,                # 带BatchNorm通常收敛更快
-    },
-    "ResNet": {
-        "input_size": (1, 1, 224, 224),
-        "resize": 224,
-        "lr": 0.05,
-        "batch_size": 128,
-        "num_epochs": 10
-    }
-}
+# 初始化模型注册中心
+# 注册各模型的默认配置
+ModelRegistry.register_config("LeNet", {
+    "input_size": (1, 1, 28, 28),  # (batch, channels, height, width)
+    "resize": None,                # Fashion-MNIST原始尺寸28x28，无需Resize
+    "lr": 0.8,                     # LeNet适合稍高学习率
+    "batch_size": 256,             # 较小输入尺寸可支持更大批次
+    "num_epochs": 3,               # 收敛较快
+})
+
+ModelRegistry.register_config("LeNetBatchNorm", {
+    "input_size": (1, 1, 28, 28),  # 与原始LeNet相同的输入尺寸
+    "resize": None,                # Fashion-MNIST原始尺寸28x28，无需Resize
+    "lr": 1.0,                     # LeNet适合稍高学习率，但BatchNorm可尝试稍低
+    "batch_size": 256,             # 较小输入尺寸可支持更大批次
+    "num_epochs": 10,              # 带BatchNorm通常收敛更快
+})
+
+ModelRegistry.register_config("AlexNet", {
+    "input_size": (1, 1, 224, 224),# AlexNet需要224x224输入
+    "resize": 224,                 # 加载数据时Resize到224x224
+    "lr": 0.01,                    # 较大模型需较低学习率避免震荡
+    "batch_size": 128,             # 224x224输入占用显存较高，批次减小
+    "num_epochs": 30,              # 训练较慢，30轮平衡效果与时间
+})
+
+ModelRegistry.register_config("VGG", {
+    "input_size": (1, 1, 224, 224),# VGG同样需要224x224输入
+    "resize": 224,
+    "lr": 0.05,                    # 更深模型需更低学习率
+    "batch_size": 128,             # VGG参数量大，显存占用更高
+    "num_epochs": 10,              # 训练耗时久，10轮兼顾效果
+})
+
+ModelRegistry.register_config("NIN", {
+    "input_size": (1, 1, 224, 224),# NIN需要224x224输入
+    "resize": 224,                 # 加载数据时Resize到224x224
+    "lr": 0.1,                     # 参考note.py中的设置
+    "batch_size": 128,             # 参考note.py中的设置
+    "num_epochs": 10,              # 参考note.py中的设置
+})
+
+ModelRegistry.register_config("GoogLeNet", {
+    "input_size": (1, 1, 96, 96),  # GoogLeNet需要96x96输入
+    "resize": 96,                  # 加载数据时Resize到96x96
+    "lr": 0.1,                     # 参考note.py中的设置
+    "batch_size": 128,             # 参考note.py中的设置
+    "num_epochs": 20,              # 参考note.py中的设置
+})
+
+ModelRegistry.register_config("ResNet", {
+    "input_size": (1, 1, 224, 224),
+    "resize": 224,
+    "lr": 0.05,
+    "batch_size": 128,
+    "num_epochs": 10
+})
+
+# 为了向后兼容，保留MODEL_DEFAULT_CONFIGS变量
+MODEL_DEFAULT_CONFIGS = {}
+for model_name in ModelRegistry.list_models():
+    if ModelRegistry.is_registered(model_name):
+        try:
+            MODEL_DEFAULT_CONFIGS[model_name] = ModelRegistry.get_config(model_name)
+        except ValueError:
+            pass
 
 if __name__ == "__main__":
     # 创建命令行参数解析器
     parser = argparse.ArgumentParser(description="深度学习模型训练与预测工具")
+    
+    # 获取已注册的模型列表，用于动态填充参数选项
+    registered_models = ModelRegistry.list_models()
     
     # 基础参数
     
@@ -291,8 +283,9 @@ if __name__ == "__main__":
                         help='运行模式: train（训练）或 predict（预测）')
     
     # 训练模式参数
-    parser.add_argument('--model_type', type=str, default='ResNet', choices=['LeNet', 'LeNetBatchNorm', 'AlexNet', 'VGG', 'NIN', 'GoogLeNet', 'ResNet'],
-                        help='模型类型: LeNet、LeNetBatchNorm、AlexNet、VGG、NIN、GoogLeNet或ResNet')
+    parser.add_argument('--model_type', type=str, default='DenseNet' if 'DenseNet' in registered_models else registered_models[0] if registered_models else 'LeNet', 
+                        choices=registered_models,
+                        help=f"模型类型: {', '.join(registered_models)}")
 
     parser.add_argument('--num_epochs', type=int, default=None,
                         help='训练轮次（AlexNet建议10轮）')
