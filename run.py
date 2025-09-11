@@ -14,7 +14,7 @@ from src.utils.visualization import VisualizationTool
 from src.utils.file_utils import FileUtils
 from src.utils.network_utils import NetworkUtils
 from src.predictor.predictor import Predictor
-from src.data.data_loader import DataLoader
+from src.utils.data_utils import DataLoader
 from src.trainer.trainer import Trainer
 from src.models.lenet import LeNet
 from src.models.alexnet import AlexNet
