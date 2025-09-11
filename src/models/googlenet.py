@@ -1,7 +1,20 @@
 import torch
 from torch import nn
 import torch.nn.functional as F
+from src.utils.model_registry import ModelRegistry
 
+
+# 定义模型默认配置
+GOOGLENET_CONFIGS = {
+    "input_size": (1, 1, 96, 96),   # GoogLeNet需要96x96输入
+    "resize": 96,                   # 加载数据时Resize到96x96
+    "lr": 0.1,                      # 学习率设置
+    "batch_size": 128,              # 批次大小设置
+    "num_epochs": 20                # 训练轮次设置
+}
+
+
+@ModelRegistry.register_model("GoogLeNet", GOOGLENET_CONFIGS)
 class GoogLeNet(nn.Module):
     """GoogLeNet卷积神经网络"""
     

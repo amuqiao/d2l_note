@@ -1,6 +1,25 @@
 import torch
 from torch import nn
+from src.utils.model_registry import ModelRegistry
 
+# 定义模型默认配置
+LENET_CONFIGS = {
+    "input_size": (1, 1, 28, 28),  # (batch, channels, height, width)
+    "resize": None,                # Fashion-MNIST原始尺寸28x28，无需Resize
+    "lr": 0.8,                     # LeNet适合稍高学习率
+    "batch_size": 256,             # 较小输入尺寸可支持更大批次
+    "num_epochs": 10               # 收敛较快
+}
+
+LENET_BATCHNORM_CONFIGS = {
+    "input_size": (1, 1, 28, 28),  # (batch, channels, height, width)
+    "resize": None,                # Fashion-MNIST原始尺寸28x28，无需Resize
+    "lr": 1.0,                     # 带BatchNorm的LeNet学习率
+    "batch_size": 256,             # 较小输入尺寸可支持更大批次
+    "num_epochs": 10               # 带BatchNorm通常收敛更快
+}
+
+@ModelRegistry.register_model("LeNet", LENET_CONFIGS)
 class LeNet(nn.Module):
     """LeNet卷积神经网络"""
 
@@ -32,6 +51,7 @@ class LeNet(nn.Module):
         x = self.classifier(x)
         return x
     
+@ModelRegistry.register_model("LeNetBatchNorm", LENET_BATCHNORM_CONFIGS)
 class LeNetBatchNorm(nn.Module):
     """带Batch Normalization的LeNet卷积神经网络"""
 

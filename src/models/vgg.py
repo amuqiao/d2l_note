@@ -1,6 +1,19 @@
 import torch
 from torch import nn
+from src.utils.model_registry import ModelRegistry
 
+
+# 定义模型默认配置
+VGG_CONFIGS = {
+    "input_size": (1, 1, 224, 224), # VGG同样需要224x224输入
+    "resize": 224,                  # 加载数据时Resize到224x224
+    "lr": 0.05,                     # 更深模型需更低学习率
+    "batch_size": 128,              # VGG参数量大，显存占用更高
+    "num_epochs": 10                # 训练耗时久，10轮兼顾效果
+}
+
+
+@ModelRegistry.register_model("VGG", VGG_CONFIGS)
 class VGG(nn.Module):
     """VGG卷积神经网络（使用简化版本适配Fashion-MNIST）"""
     

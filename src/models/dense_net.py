@@ -47,7 +47,7 @@ def transition_block(input_channels, num_channels):
         nn.AvgPool2d(kernel_size=2, stride=2))
 
 
-@ModelRegistry.register_model("DenseNet", config=DENSENET_CONFIGS)
+@ModelRegistry.register_model("DenseNet", DENSENET_CONFIGS)
 class DenseNet(nn.Module):
     """DenseNet模型实现"""
 

@@ -204,62 +204,8 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
 import argparse
 
 # 初始化模型注册中心
-# 注册各模型的默认配置
-ModelRegistry.register_config("LeNet", {
-    "input_size": (1, 1, 28, 28),  # (batch, channels, height, width)
-    "resize": None,                # Fashion-MNIST原始尺寸28x28，无需Resize
-    "lr": 0.8,                     # LeNet适合稍高学习率
-    "batch_size": 256,             # 较小输入尺寸可支持更大批次
-    "num_epochs": 3,               # 收敛较快
-})
-
-ModelRegistry.register_config("LeNetBatchNorm", {
-    "input_size": (1, 1, 28, 28),  # 与原始LeNet相同的输入尺寸
-    "resize": None,                # Fashion-MNIST原始尺寸28x28，无需Resize
-    "lr": 1.0,                     # LeNet适合稍高学习率，但BatchNorm可尝试稍低
-    "batch_size": 256,             # 较小输入尺寸可支持更大批次
-    "num_epochs": 10,              # 带BatchNorm通常收敛更快
-})
-
-ModelRegistry.register_config("AlexNet", {
-    "input_size": (1, 1, 224, 224),# AlexNet需要224x224输入
-    "resize": 224,                 # 加载数据时Resize到224x224
-    "lr": 0.01,                    # 较大模型需较低学习率避免震荡
-    "batch_size": 128,             # 224x224输入占用显存较高，批次减小
-    "num_epochs": 30,              # 训练较慢，30轮平衡效果与时间
-})
-
-ModelRegistry.register_config("VGG", {
-    "input_size": (1, 1, 224, 224),# VGG同样需要224x224输入
-    "resize": 224,
-    "lr": 0.05,                    # 更深模型需更低学习率
-    "batch_size": 128,             # VGG参数量大，显存占用更高
-    "num_epochs": 10,              # 训练耗时久，10轮兼顾效果
-})
-
-ModelRegistry.register_config("NIN", {
-    "input_size": (1, 1, 224, 224),# NIN需要224x224输入
-    "resize": 224,                 # 加载数据时Resize到224x224
-    "lr": 0.1,                     # 参考note.py中的设置
-    "batch_size": 128,             # 参考note.py中的设置
-    "num_epochs": 10,              # 参考note.py中的设置
-})
-
-ModelRegistry.register_config("GoogLeNet", {
-    "input_size": (1, 1, 96, 96),  # GoogLeNet需要96x96输入
-    "resize": 96,                  # 加载数据时Resize到96x96
-    "lr": 0.1,                     # 参考note.py中的设置
-    "batch_size": 128,             # 参考note.py中的设置
-    "num_epochs": 20,              # 参考note.py中的设置
-})
-
-ModelRegistry.register_config("ResNet", {
-    "input_size": (1, 1, 224, 224),
-    "resize": 224,
-    "lr": 0.05,
-    "batch_size": 128,
-    "num_epochs": 10
-})
+# 注意：所有模型已在对应模型文件中通过装饰器注册了配置
+# 包括：LeNet、AlexNet、VGG、NIN、GoogLeNet、ResNet、DenseNet
 
 # 为了向后兼容，保留MODEL_DEFAULT_CONFIGS变量
 MODEL_DEFAULT_CONFIGS = {}
@@ -283,7 +229,7 @@ if __name__ == "__main__":
                         help='运行模式: train（训练）或 predict（预测）')
     
     # 训练模式参数
-    parser.add_argument('--model_type', type=str, default='DenseNet' if 'DenseNet' in registered_models else registered_models[0] if registered_models else 'LeNet', 
+    parser.add_argument('--model_type', type=str, default='LeNet' if 'LeNet' in registered_models else registered_models[0] if registered_models else 'LeNet', 
                         choices=registered_models,
                         help=f"模型类型: {', '.join(registered_models)}")
 

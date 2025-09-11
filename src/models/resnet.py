@@ -1,6 +1,17 @@
 import torch
 from torch import nn
 from torch.nn import functional as F
+from src.utils.model_registry import ModelRegistry
+
+
+# 定义模型默认配置
+RESNET_CONFIGS = {
+    "input_size": (1, 1, 224, 224),  # (batch, channels, height, width)
+    "resize": 224,                    # 加载数据时Resize到224x224
+    "lr": 0.05,                       # 学习率
+    "batch_size": 128,                # 批次大小
+    "num_epochs": 10                  # 训练轮次
+}
 
 class Residual(nn.Module):
     """残差块：ResNet的基本构建单元"""
@@ -46,6 +57,7 @@ def resnet_block(input_channels, num_channels, num_residuals,
     return blk
 
 
+@ModelRegistry.register_model("ResNet", RESNET_CONFIGS)
 class ResNet(nn.Module):
     """ResNet模型实现（ResNet-18）"""
 
@@ -88,14 +100,7 @@ class ResNet(nn.Module):
         return x
 
 
-# 模型配置
-RESNET_CONFIGS = {
-    "input_size": (1, 1, 224, 224),  # (batch, channels, height, width)
-    "resize": 224,                    # 加载数据时Resize到224x224
-    "lr": 0.05,                       # 学习率
-    "batch_size": 128,                # 批次大小
-    "num_epochs": 10                  # 训练轮次
-}
+# 配置已经在文件顶部定义，这里不再重复定义
 
 
 if __name__ == "__main__":

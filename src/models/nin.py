@@ -1,6 +1,19 @@
 import torch
 from torch import nn
+from src.utils.model_registry import ModelRegistry
 
+
+# 定义模型默认配置
+NIN_CONFIGS = {
+    "input_size": (1, 1, 224, 224), # NIN需要224x224输入
+    "resize": 224,                  # 加载数据时Resize到224x224
+    "lr": 0.1,                      # 学习率设置
+    "batch_size": 128,              # 批次大小设置
+    "num_epochs": 10                # 训练轮次设置
+}
+
+
+@ModelRegistry.register_model("NIN", NIN_CONFIGS)
 class NIN(nn.Module):
     """Network in Network (NIN)卷积神经网络"""
     

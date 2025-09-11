@@ -1,7 +1,19 @@
 import torch
 from torch import nn
+from src.utils.model_registry import ModelRegistry
 
 
+# 定义模型默认配置
+ALEXNET_CONFIGS = {
+    "input_size": (1, 1, 224, 224), # AlexNet需要224x224输入
+    "resize": 224,                  # 加载数据时Resize到224x224
+    "lr": 0.01,                     # 较大模型需较低学习率避免震荡
+    "batch_size": 128,              # 224x224输入占用显存较高，批次减小
+    "num_epochs": 30                # 训练较慢，30轮平衡效果与时间
+}
+
+
+@ModelRegistry.register_model("AlexNet", ALEXNET_CONFIGS)
 class AlexNet(nn.Module):
     """AlexNet卷积神经网络"""
 
