@@ -3,7 +3,7 @@ from d2l import torch as d2l
 import os
 import json
 import matplotlib.pyplot as plt
-from src.models.lenet import LeNet
+from src.models.lenet import LeNet, LeNetBatchNorm
 from src.models.alexnet import AlexNet
 from src.models.vgg import VGG
 from src.models.nin import NIN
@@ -125,6 +125,8 @@ class Predictor:
         try:
             if model_name == "LeNet":
                 net = LeNet()
+            elif model_name == "LeNetBatchNorm":
+                net = LeNetBatchNorm()
             elif model_name == "AlexNet":
                 net = AlexNet()
             elif model_name == "VGG":

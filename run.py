@@ -16,7 +16,7 @@ from src.utils.network_utils import NetworkUtils
 from src.predictor.predictor import Predictor
 from src.utils.data_utils import DataLoader
 from src.trainer.trainer import Trainer
-from src.models.lenet import LeNet
+from src.models.lenet import LeNet, LeNetBatchNorm
 from src.models.alexnet import AlexNet
 from src.models.vgg import VGG
 from src.models.nin import NIN
@@ -52,6 +52,8 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
         # 1. 创建模型
         if model_type == "LeNet":
             net = LeNet()
+        elif model_type == "LeNetBatchNorm":
+            net = LeNetBatchNorm()
         elif model_type == "AlexNet":
             net = AlexNet()
         elif model_type == "VGG":
@@ -64,7 +66,19 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
             raise ValueError(f"不支持的模型类型: {model_type}")
 
         # 测试网络结构
-        NetworkUtils.test_network_shape(net, input_size=input_size)
+        if model_type == "LeNet" or model_type == "LeNetBatchNorm":
+            NetworkUtils.test_lenet_shape(net, input_size=input_size)
+        elif model_type == "AlexNet":
+            NetworkUtils.test_alexnet_shape(net, input_size=input_size)
+        elif model_type == "VGG":
+            NetworkUtils.test_vgg_shape(net, input_size=input_size)
+        elif model_type == "NIN":
+            NetworkUtils.test_nin_shape(net, input_size=input_size)
+        elif model_type == "GoogLeNet":
+            NetworkUtils.test_googlenet_shape(net, input_size=input_size)
+        else:
+            # 默认使用通用测试方法
+            NetworkUtils.test_network_shape(net, input_size=input_size)
 
         # 2. 加载数据
         print(f"📥 加载Fashion-MNIST（batch_size={batch_size}, resize={resize}）")
@@ -245,6 +259,13 @@ MODEL_DEFAULT_CONFIGS = {
         "lr": 0.1,                      # 参考note.py中的设置
         "batch_size": 128,              # 参考note.py中的设置
         "num_epochs": 20,               # 参考note.py中的设置
+    },
+    "LeNetBatchNorm": {
+        "input_size": (1, 1, 28, 28),   # 与原始LeNet相同的输入尺寸
+        "resize": None,                 # Fashion-MNIST原始尺寸28x28，无需Resize
+        "lr": 1,                      # LeNet适合稍高学习率，但BatchNorm可尝试稍低
+        "batch_size": 256,              # 较小输入尺寸可支持更大批次
+        "num_epochs": 10,                # 带BatchNorm通常收敛更快
     }
 }
 
@@ -258,8 +279,8 @@ if __name__ == "__main__":
                         help='运行模式: train（训练）或 predict（预测）')
     
     # 训练模式参数
-    parser.add_argument('--model_type', type=str, default='LeNet', choices=['LeNet', 'AlexNet', 'VGG', 'NIN', 'GoogLeNet'],
-                        help='模型类型: LeNet、AlexNet或VGG')
+    parser.add_argument('--model_type', type=str, default='LeNetBatchNorm', choices=['LeNet', 'LeNetBatchNorm', 'AlexNet', 'VGG', 'NIN', 'GoogLeNet'],
+                        help='模型类型: LeNet、LeNetBatchNorm、AlexNet、VGG、NIN或GoogLeNet')
 
     parser.add_argument('--num_epochs', type=int, default=None,
                         help='训练轮次（AlexNet建议10轮）')
@@ -280,7 +301,7 @@ if __name__ == "__main__":
                         help='训练目录的根目录路径，默认为执行脚本的目录（当前工作目录）')
     
     # 预测模式参数
-    parser.add_argument('--run_dir', type=str, default="data/run_20250909_204054",
+    parser.add_argument('--run_dir', type=str, default=None,
                         help='训练目录路径（推荐方式）')
     parser.add_argument('--model_file', type=str, default=None,
                         help='可选，指定要加载的模型文件名，不指定则自动加载该目录下的最佳模型')
