@@ -124,15 +124,6 @@ import argparse
 # 注意：所有模型已在对应模型文件中通过装饰器注册了配置
 # 包括：LeNet、AlexNet、VGG、NIN、GoogLeNet、ResNet、DenseNet
 
-# 为了向后兼容，保留MODEL_DEFAULT_CONFIGS变量
-MODEL_DEFAULT_CONFIGS = {}
-for model_name in ModelRegistry.list_models():
-    if ModelRegistry.is_registered(model_name):
-        try:
-            MODEL_DEFAULT_CONFIGS[model_name] = ModelRegistry.get_config(model_name)
-        except ValueError:
-            pass
-
 if __name__ == "__main__":
     # 创建命令行参数解析器
     parser = argparse.ArgumentParser(description="深度学习模型训练与预测工具")
@@ -142,7 +133,7 @@ if __name__ == "__main__":
     
     # 基础参数
     
-    parser.add_argument('--mode', type=str, default='predict', choices=['train', 'predict'],
+    parser.add_argument('--mode', type=str, default='train', choices=['train', 'predict'],
                         help='运行模式: train（训练）或 predict（预测）')
     
     # 训练模式参数
@@ -186,22 +177,39 @@ if __name__ == "__main__":
     
     # 根据模式添加特定参数
     if args.mode == 'train':
-        # 获取当前模型类型的默认配置
-        default_config = MODEL_DEFAULT_CONFIGS[args.model_type]
-        
-        # 当参数为None时，使用默认配置的值
-        call_args.update({
-            'num_epochs': args.num_epochs if args.num_epochs is not None else default_config["num_epochs"],
-            'lr': args.lr if args.lr is not None else default_config["lr"],
-            'batch_size': args.batch_size if args.batch_size is not None else default_config["batch_size"],
-            'input_size': args.input_size if args.input_size is not None else default_config["input_size"],
-            'resize': args.resize if args.resize is not None else default_config["resize"],
-            'model_type': args.model_type,
-            'save_every_epoch': args.save_every_epoch,
-            'enable_visualization': not args.disable_visualization,
-            'n': args.n,
-            'root_dir': args.root_dir
-        })
+        # 获取当前模型类型的默认配置，参考batch_train.py实现
+        try:
+            # 直接从模型注册中心获取配置
+            default_config = ModelRegistry.get_config(args.model_type)
+            
+            # 当参数为None时，使用默认配置的值
+            call_args.update({
+                'num_epochs': args.num_epochs if args.num_epochs is not None else default_config["num_epochs"],
+                'lr': args.lr if args.lr is not None else default_config["lr"],
+                'batch_size': args.batch_size if args.batch_size is not None else default_config["batch_size"],
+                'input_size': args.input_size if args.input_size is not None else default_config["input_size"],
+                'resize': args.resize if args.resize is not None else default_config["resize"],
+                'model_type': args.model_type,
+                'save_every_epoch': args.save_every_epoch,
+                'enable_visualization': not args.disable_visualization,
+                'n': args.n,
+                'root_dir': args.root_dir
+            })
+        except ValueError:
+            # 处理配置不存在的情况
+            print(f"⚠️ 模型 '{args.model_type}' 没有默认配置，使用基础配置")
+            call_args.update({
+                'num_epochs': args.num_epochs or 10,
+                'lr': args.lr or 0.01,
+                'batch_size': args.batch_size or 128,
+                'input_size': args.input_size or (1, 1, 28, 28),
+                'resize': args.resize,
+                'model_type': args.model_type,
+                'save_every_epoch': args.save_every_epoch,
+                'enable_visualization': not args.disable_visualization,
+                'n': args.n,
+                'root_dir': args.root_dir
+            })
     else:  # predict模式
         call_args.update({
             'run_dir': args.run_dir,
