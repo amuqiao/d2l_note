@@ -1,7 +1,7 @@
 import os
 import sys
 import argparse
-from src.trainer.optimized_trainer import Trainer
+from src.trainer.trainer import Trainer
 from src.utils.model_registry import ModelRegistry
 
 # 解决OpenMP运行时库冲突问题

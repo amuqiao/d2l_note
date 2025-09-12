@@ -14,7 +14,7 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.utils.model_registry import ModelRegistry
-from src.trainer.optimized_trainer import Trainer
+from src.trainer.trainer import Trainer
 from src.utils.data_utils import DataLoader
 from src.utils.visualization import VisualizationTool
 

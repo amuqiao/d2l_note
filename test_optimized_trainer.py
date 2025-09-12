@@ -5,7 +5,7 @@
 
 import os
 import sys
-from src.trainer.optimized_trainer import Trainer
+from src.trainer.trainer import Trainer
 
 # 解决OpenMP运行时库冲突问题
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
