@@ -38,8 +38,12 @@ class LogUtils:
             cls._instance = super(LogUtils, cls).__new__(cls)
         return cls._instance
     
-    def __init__(self):
-        """初始化日志工具"""
+    def __init__(self, auto_add_file_handler: bool = True):
+        """初始化日志工具
+        
+        参数:
+            auto_add_file_handler: 是否自动添加文件handler，默认为True
+        """
         # 防止多次初始化
         if self._initialized:
             return
@@ -56,6 +60,29 @@ class LogUtils:
             
         # 添加控制台handler（默认启用）
         self._add_console_handler()
+        
+        # 自动添加文件handler（默认启用）
+        if auto_add_file_handler:
+            log_dir = 'logs'
+            log_file = None
+            log_level = 'INFO'
+            use_timestamp = True
+            
+            # 创建日志目录
+            if not os.path.exists(log_dir):
+                os.makedirs(log_dir, exist_ok=True)
+                
+            # 生成日志文件名
+            if log_file is None:
+                timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S') if use_timestamp else ''
+                log_file = f'd2l_note_{timestamp}.log' if timestamp else 'd2l_note.log'
+            
+            log_file_path = os.path.join(log_dir, log_file)
+            
+            # 添加文件handler
+            self._add_file_handler(log_file_path, log_level)
+            
+            self.info(f"日志系统初始化完成，日志文件: {log_file_path}")
     
     def _add_console_handler(self):
         """添加控制台输出handler"""
