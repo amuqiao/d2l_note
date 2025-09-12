@@ -9,7 +9,7 @@ class FileUtils:
     """文件操作工具类：提供目录创建、配置保存、指标保存等功能"""
 
     @staticmethod
-    def create_run_dir(prefix="data/run_", root_dir=None):
+    def create_run_dir(prefix="runs/run_", root_dir=None):
         """创建时间戳唯一目录（格式：run_年日月_时分秒）
         
         参数:

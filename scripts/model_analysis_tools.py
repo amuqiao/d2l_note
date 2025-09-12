@@ -651,7 +651,7 @@ def main():
     parser.add_argument(
         "--pattern",
         type=str,
-        default="data/run_*",
+        default="runs/run_*",
         help="目录匹配模式（summarize/compare/latest模式均生效）",
     )
     parser.add_argument(

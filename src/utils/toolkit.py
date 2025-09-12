@@ -24,7 +24,7 @@ class Toolkit:
         return VisualizationTool.setup_font()
 
     @staticmethod
-    def create_run_dir(prefix="data/run_", root_dir=None):
+    def create_run_dir(prefix="runs/run_", root_dir=None):
         """创建时间戳唯一目录（格式：run_年日月_时分秒）"""
         return FileUtils.create_run_dir(prefix, root_dir)
 
