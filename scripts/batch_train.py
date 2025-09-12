@@ -17,6 +17,7 @@ from src.utils.model_registry import ModelRegistry
 from src.trainer.trainer import Trainer
 from src.utils.data_utils import DataLoader
 from src.utils.visualization import VisualizationTool
+from src.utils.common_train import train_model_common
 
 class BatchTrainer:
     """批量训练工具类：用于批量训练所有已注册的模型"""
@@ -62,7 +63,7 @@ class BatchTrainer:
     
     def train_model(self, model_name: str, config: Dict[str, Any]) -> Dict[str, Any]:
         """
-        训练单个模型，包含完整的异常处理机制
+        训练单个模型，使用公共训练方法
         
         Args:
             model_name: 模型名称
@@ -71,96 +72,15 @@ class BatchTrainer:
         Returns:
             训练结果字典（包含成功/失败状态和详细信息）
         """
-        print(f"\n{'='*60}")
-        print(f"🚀 开始训练模型: {model_name}")
-        print(f"{'='*60}")
+        # 使用公共训练方法训练模型
+        enable_visualization = config.get("enable_visualization", False)
+        save_every_epoch = config.get("save_every_epoch", False)
         
-        start_time = time.time()
-        result = {
-            "model_name": model_name,
-            "best_accuracy": 0.0,
-            "training_time": 0,
-            "error": None,
-            "config": config,
-            "success": False
-        }
+        result = train_model_common(model_name, config, enable_visualization, save_every_epoch)
         
-        try:
-            # 1. 创建模型
-            try:
-                net = ModelRegistry.create_model(model_name)
-                print(f"🔧 模型 {model_name} 创建成功")
-            except Exception as e:
-                raise RuntimeError(f"模型创建失败: {str(e)}")
-            
-            # 2. 测试网络结构
-            try:
-                test_func = ModelRegistry.get_test_func(model_name)
-                test_func(net, input_size=config["input_size"])
-                print(f"✅ 模型 {model_name} 网络结构测试通过")
-            except Exception as e:
-                raise RuntimeError(f"模型结构测试失败: {str(e)}")
-            
-            # 3. 加载数据
-            try:
-                print(f"📥 加载Fashion-MNIST数据（batch_size={config['batch_size']}, resize={config['resize']}）")
-                train_iter, test_iter = DataLoader.load_data(
-                    batch_size=config["batch_size"], 
-                    resize=config["resize"]
-                )
-                print(f"📊 数据加载完成")
-            except Exception as e:
-                raise RuntimeError(f"数据加载失败: {str(e)}")
-            
-            # 4. 创建训练器
-            try:
-                trainer = Trainer(
-                    net, 
-                    save_every_epoch=config.get("save_every_epoch", False)
-                )
-                print(f"🏋️  训练器创建成功")
-            except Exception as e:
-                raise RuntimeError(f"训练器初始化失败: {str(e)}")
-            
-            # 5. 训练模型
-            try:
-                run_dir, best_acc = trainer.train(
-                    train_iter=train_iter,
-                    test_iter=test_iter,
-                    num_epochs=config["num_epochs"],
-                    lr=config["lr"],
-                    batch_size=config["batch_size"],
-                    enable_visualization=config.get("enable_visualization", False)
-                )
-            except Exception as e:
-                raise RuntimeError(f"模型训练过程失败: {str(e)}")
-            
-            # 计算训练时间
-            training_time = time.time() - start_time
-            
-            result.update({
-                "best_accuracy": best_acc,
-                "training_time": training_time,
-                "run_dir": run_dir,
-                "success": True
-            })
-            
-            print(f"🎉 {model_name} 训练完成！最佳准确率: {best_acc:.4f}，耗时: {training_time:.2f}秒")
-            print(f"📁 训练结果保存目录: {run_dir}")
-            
-        except Exception as e:
-            # 记录训练失败的情况，确保捕获所有异常
-            training_time = time.time() - start_time
-            error_msg = f"{type(e).__name__}: {str(e)}"
-            result.update({
-                "training_time": training_time,
-                "error": error_msg,
-                "success": False
-            })
-            
-            print(f"❌ {model_name} 训练失败！")
-            print(f"💬 错误类型: {type(e).__name__}")
-            print(f"📝 错误详情: {str(e)}")
+        # 额外的保存目录信息（如果需要更详细的日志）
+        if result["success"] and result.get("run_dir"):
+            print(f"📁 训练结果保存目录: {result['run_dir']}")
         
         self.results.append(result)
         return result

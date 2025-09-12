@@ -17,6 +17,7 @@ from src.utils.model_registry import ModelRegistry
 from src.predictor.predictor import Predictor
 from src.utils.data_utils import DataLoader
 from src.trainer.trainer import Trainer
+from src.utils.common_train import train_model_common
 
 # 导入模型并注册
 from src.models.lenet import LeNet, LeNetBatchNorm
@@ -55,33 +56,27 @@ def main(mode="train", run_dir=None, model_file=None, **kwargs):
         input_size = kwargs.get("input_size")
         resize = kwargs.get("resize")
 
-        # 1. 创建模型（使用模型注册中心）
-        net = ModelRegistry.create_model(model_type)
-
-        # 2. 测试网络结构（使用模型注册中心的测试函数）
-        test_func = ModelRegistry.get_test_func(model_type)
-        test_func(net, input_size=input_size)
-
-        # 2. 加载数据
-        print(f"📥 加载Fashion-MNIST（batch_size={batch_size}, resize={resize}）")
-        train_iter, test_iter = d2l.load_data_fashion_mnist(
-            batch_size=batch_size, resize=resize
-        )
-
-        # 3. 训练模型
+        # 构建配置参数
+        config = {
+            "num_epochs": num_epochs,
+            "lr": lr,
+            "batch_size": batch_size,
+            "resize": resize,
+            "input_size": input_size,
+            "root_dir": kwargs.get("root_dir")
+        }
+        
+        # 使用公共训练方法训练模型
         save_every_epoch = kwargs.get("save_every_epoch", False)
-        trainer = Trainer(net, save_every_epoch=save_every_epoch)
-        # 训练模型（启用实时可视化）
-        print("🎨 启用实时可视化训练过程...")
         enable_visualization = kwargs.get("enable_visualization", True)
-        run_dir, best_acc = trainer.train(
-            train_iter=train_iter,
-            test_iter=test_iter,
-            num_epochs=num_epochs,
-            lr=lr,
-            batch_size=batch_size,
-            enable_visualization=enable_visualization,  # 启用实时可视化
-        )
+        result = train_model_common(model_type, config, enable_visualization, save_every_epoch)
+        
+        # 获取训练结果
+        if result["success"]:
+            run_dir = result["run_dir"]
+            best_acc = result["best_accuracy"]
+        else:
+            raise RuntimeError(f"模型训练失败: {result['error']}")
 
         # 4. 训练后自动预测可视化
         print(f"\n🎉 训练完成，开始预测可视化（目录: {run_dir}）")
@@ -229,7 +224,7 @@ if __name__ == "__main__":
                         help='运行模式: train（训练）或 predict（预测）')
     
     # 训练模式参数
-    parser.add_argument('--model_type', type=str, default='AlexNet' if 'AlexNet' in registered_models else registered_models[0] if registered_models else 'LeNet', 
+    parser.add_argument('--model_type', type=str, default='LeNet' if 'LeNet' in registered_models else registered_models[0] if registered_models else 'LeNet', 
                         choices=registered_models,
                         help=f"模型类型: {', '.join(registered_models)}")
 

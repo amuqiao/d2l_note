@@ -10,7 +10,7 @@ DENSENET_CONFIGS = {
     "resize": 96,                    # 加载数据时Resize到96x96
     "lr": 0.1,                       # 学习率
     "batch_size": 256,               # 批次大小
-    "num_epochs": 10                 # 训练轮次
+    "num_epochs": 2                 # 训练轮次
 }
 
 
