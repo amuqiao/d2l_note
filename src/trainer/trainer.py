@@ -101,6 +101,8 @@ class Trainer:
         print(f"{'='*60}")
         
         start_time = time.time()
+        # 记录具体的开始训练时间点（日期+时间）
+        training_start_time = datetime.datetime.now()
         result = {
             "model_name": model_type,
             "best_accuracy": 0.0,
@@ -108,7 +110,8 @@ class Trainer:
             "error": None,
             "config": config,
             "success": False,
-            "run_dir": None
+            "run_dir": None,
+            "training_start_time": training_start_time.strftime("%Y-%m-%d %H:%M:%S")
         }
         
         try:
@@ -147,26 +150,36 @@ class Trainer:
             
             # 5. 记录结果
             training_time = time.time() - start_time
+            # 记录具体的结束训练时间点（日期+时间）
+            training_end_time = datetime.datetime.now()
             result.update({
                 "best_accuracy": best_acc,
                 "training_time": training_time,
                 "run_dir": run_dir,
-                "success": True
+                "success": True,
+                "training_end_time": training_end_time.strftime("%Y-%m-%d %H:%M:%S")
             })
             
             print(f"🎉 {model_type} 训练完成！最佳准确率: {best_acc:.4f}，耗时: {training_time:.2f}秒")
-            
+            print(f"⏱️ 训练开始时间: {training_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"⏱️ 训练结束时间: {training_end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+        
         except Exception as e:
             # 异常处理
             training_time = time.time() - start_time
+            # 异常情况下也记录结束时间
+            training_end_time = datetime.datetime.now()
             error_msg = f"{type(e).__name__}: {str(e)}"
             result.update({
                 "training_time": training_time,
                 "error": error_msg,
-                "success": False
+                "success": False,
+                "training_end_time": training_end_time.strftime("%Y-%m-%d %H:%M:%S")
             })
             
             print(f"❌ {model_type} 训练失败！错误: {error_msg}")
+            print(f"⏱️ 训练开始时间: {training_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            print(f"⏱️ 训练结束时间: {training_end_time.strftime('%Y-%m-%d %H:%M:%S')}")
         
         return result
 
@@ -226,6 +239,8 @@ class Trainer:
 
         # 3. 开始训练
         print(f"\n🚀 开始训练（设备: {self.device}，轮次: {num_epochs}）")
+        # 记录训练开始的具体时间点
+        training_start_time = datetime.datetime.now()
         for epoch in range(num_epochs):
             self.net.train()  # 切换到训练模式
             metric = d2l.Accumulator(3)  # 累计：损失、正确数、总数
@@ -289,6 +304,8 @@ class Trainer:
 
         # 5. 训练结束：保存最终指标（包含完整的epoch指标历史）
         total_time = timer.sum()
+        # 记录训练结束的具体时间点
+        training_end_time = datetime.datetime.now()
         final_metrics = {
             "final_train_loss": train_loss,
             "final_train_acc": train_acc,
@@ -297,6 +314,8 @@ class Trainer:
             "total_training_time": f"{total_time:.2f}s",
             "samples_per_second": f"{self.total_samples / total_time:.1f}",
             "epoch_metrics": epoch_metrics,  # 包含完整的每轮指标历史
+            "training_start_time": training_start_time.strftime("%Y-%m-%d %H:%M:%S"),
+            "training_end_time": training_end_time.strftime("%Y-%m-%d %H:%M:%S")
         }
         FileUtils.save_metrics(final_metrics, os.path.join(self.run_dir, "metrics.json"))
 

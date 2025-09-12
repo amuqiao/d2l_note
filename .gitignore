@@ -1,6 +1,7 @@
 # 忽略数据目录
 data/
 /runs/* 
+/logs/*
 
 # 忽略VS Code配置文件
 .vscode/

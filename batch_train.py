@@ -136,14 +136,35 @@ class BatchTrainer:
         
         return self.results
     
-    def save_results(self, output_file: str = None) -> str:
-        """保存训练结果到JSON文件"""
-        if not output_file:
+    def save_results(self, output_path: str = None) -> str:
+        """保存训练结果到指定路径的JSON文件
+        
+        Args:
+            output_path: 结果保存路径，可以是文件名或目录名。如果是目录名，则会在该目录下创建带时间戳的文件名
+                        默认保存在根目录下的log目录
+                        
+        Returns:
+            保存结果的完整文件路径
+        """
+        # 获取项目根目录
+        root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+        
+        # 处理默认情况，设置为根目录下的log目录
+        if not output_path:
+            output_path = os.path.join(root_dir, "log")
+            
+        # 判断output_path是目录还是文件名
+        if not os.path.splitext(output_path)[1]:
+            # 没有文件扩展名，视为目录
+            output_dir = output_path
             timestamp = datetime.datetime.now().strftime("%Y%m%d_%H%M%S")
-            output_file = f"batch_train_results_{timestamp}.json"
+            output_file = os.path.join(output_dir, f"batch_train_results_{timestamp}.json")
+        else:
+            # 有文件扩展名，视为完整文件路径
+            output_file = output_path
+            output_dir = os.path.dirname(os.path.abspath(output_file))
         
         # 确保输出目录存在
-        output_dir = os.path.dirname(os.path.abspath(output_file))
         os.makedirs(output_dir, exist_ok=True)
         
         # 保存结果
@@ -159,11 +180,13 @@ class BatchTrainer:
             print("⚠️ 没有训练结果可显示！")
             return
         
-        print(f"\n{'='*60}")
+        print(f"\n{'='*120}")
         print("📊 批量训练结果摘要")
-        print(f"{'='*60}")
-        print(f"{'模型名称':<15} {'最佳准确率':<12} {'训练时间(秒)':<12} {'状态'}")
-        print(f"{'-'*60}")
+        print(f"{'='*120}")
+        # 修改表格标题，添加开始和结束时间列
+        print(f"{'模型名称':<15} {'最佳准确率':<12} {'训练时间(秒)':<12} {'开始时间':<20} {'结束时间':<20} {'状态'}")
+
+        print(f"{'-'*120}")
         
         # 分开统计成功和失败的模型
         successful_models = []
@@ -171,7 +194,12 @@ class BatchTrainer:
         
         for result in self.results:
             status = "✅ 成功" if result["success"] else "❌ 失败"
-            print(f"{result['model_name']:<15} {result['best_accuracy']:.4f}       {result['training_time']:.2f}         {status}")
+            # 获取开始和结束时间，如果不存在则显示"-"
+            start_time = result.get("training_start_time", "-")
+            end_time = result.get("training_end_time", "-")
+            # 打印包含时间信息的行，修正对齐格式
+            print(f"{result['model_name']:<15} {result['best_accuracy']:<12.4f} {result['training_time']:<12.2f} {start_time:<20} {end_time:<20} {status}")
+            print()  # 在数据行之间增加一个空行
             
             if result["success"]:
                 successful_models.append(result)
@@ -182,7 +210,7 @@ class BatchTrainer:
         success_count = len(successful_models)
         fail_count = len(failed_models)
         
-        print(f"{'-'*60}")
+        print(f"{'-'*120}")
         print(f"总计: {success_count}个成功, {fail_count}个失败")
         if success_count > 0:
             avg_accuracy = sum(r["best_accuracy"] for r in successful_models) / success_count
@@ -210,7 +238,7 @@ def parse_arguments():
     parser.add_argument('--epochs', type=int, help="所有模型的训练轮数")
     parser.add_argument('--lr', type=float, help="所有模型的学习率")
     parser.add_argument('--batch_size', type=int, help="所有模型的批次大小")
-    parser.add_argument('--output', type=str, help="训练结果输出文件路径")
+    parser.add_argument('--output_dir', type=str, default='logs', help="训练结果输出目录路径")
     parser.add_argument('--enable_visualization', action='store_true', help="启用每个模型的训练可视化")
     
     return parser.parse_args()
@@ -313,8 +341,8 @@ def main():
     batch_trainer.print_summary()
     
     # 保存结果到文件
-    output_file = args.output
-    batch_trainer.save_results(output_file)
+    output_dir = args.output_dir
+    batch_trainer.save_results(output_dir)
 
 if __name__ == "__main__":
     main()
