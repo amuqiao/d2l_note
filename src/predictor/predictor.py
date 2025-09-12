@@ -1,20 +1,26 @@
 import torch
 from d2l import torch as d2l
 import os
+import sys
 import json
 import matplotlib.pyplot as plt
+import glob
+from typing import Optional, Dict, Any, List
 from src.models.lenet import LeNet, LeNetBatchNorm
 from src.models.alexnet import AlexNet
 from src.models.vgg import VGG
 from src.models.nin import NIN
 from src.models.googlenet import GoogLeNet
 from src.models.resnet import ResNet
+from src.models.dense_net import DenseNet
+from src.models.mlp import MLP
 from src.utils.file_utils import FileUtils
 from src.utils.visualization import VisualizationTool
+from src.utils.data_utils import DataLoader
 
-# ========================= 模型预测类 =========================
+# ========================= 增强版模型预测类 =========================
 class Predictor:
-    """模型预测类（支持从训练目录加载模型，可视化预测结果）"""
+    """增强版模型预测类：整合了预测核心功能和高级工具功能"""
 
     def __init__(self, net, device=None):
         self.net = net
@@ -23,6 +29,11 @@ class Predictor:
         self.net.eval()  # 初始化即切换到评估模式
         self.config = None  # 加载的训练配置
         self.best_acc = None  # 模型最佳准确率
+        self.run_dir = None  # 训练目录路径
+        self.model_path = None  # 模型文件路径
+        
+        # 设置中文字体
+        VisualizationTool.setup_font()
 
     @classmethod
     def from_run_dir(cls, run_dir, device=None, model_file=None):
@@ -56,7 +67,9 @@ class Predictor:
             
         # 3. 复用from_model_path方法加载模型和配置
         # 注意：这里传入了明确的config_path，确保配置能被正确加载
-        return cls.from_model_path(model_path, config_path=config_path, device=device)
+        predictor = cls.from_model_path(model_path, config_path=config_path, device=device)
+        predictor.run_dir = run_dir
+        return predictor
 
     @classmethod
     def from_model_path(cls, model_path, config_path=None, device=None):
@@ -138,6 +151,10 @@ class Predictor:
                 net = GoogLeNet()
             elif model_name == "ResNet":
                 net = ResNet()
+            elif model_name == "DenseNet":
+                net = DenseNet()
+            elif model_name == "MLP":
+                net = MLP()
             else:
                 raise ValueError(f"不支持的模型类型: {model_name}")
 
@@ -151,7 +168,120 @@ class Predictor:
         predictor = cls(net, device)
         predictor.config = config
         predictor.best_acc = best_acc
+        predictor.model_path = model_path
         return predictor
+    
+    @classmethod
+    def create_from_args(cls, run_dir=None, model_file=None, model_path=None, root_dir=None, device=None):
+        """
+        从参数创建Predictor实例，支持多种创建方式
+        Args:
+            run_dir: 训练目录路径
+            model_file: 模型文件名
+            model_path: 完整模型文件路径
+            root_dir: 根目录路径，用于自动查找训练目录
+            device: 运行设备
+        Returns:
+            Predictor实例
+        """
+        if model_path:
+            # 直接从模型文件路径加载
+            print(f"🔍 模式：从模型文件直接加载")
+            return cls.from_model_path(model_path, device=device)
+        else:
+            # 如果未指定训练目录，自动选择最新目录
+            if not run_dir:
+                run_dir = cls.find_latest_run_dir(root_dir)
+            
+            # 从训练目录加载（可选择模型文件）
+            print(f"🔍 模式：从训练目录加载{', 自动选择最佳模型' if not model_file else f', 指定模型文件: {model_file}'}")
+            return cls.from_run_dir(run_dir, model_file=model_file, device=device)
+
+    @staticmethod
+    def find_latest_run_dir(root_dir: Optional[str] = None) -> str:
+        """
+        自动查找最新的训练目录
+        Args:
+            root_dir: 根目录路径
+        Returns:
+            最新训练目录的路径
+        """
+        if root_dir is None:
+            root_dir = os.getcwd()
+        
+        # 定义要搜索的目录列表（优先级顺序）
+        search_dirs = [
+            root_dir,  # 首先在root_dir目录下查找
+            os.path.join(root_dir, "data")  # 然后在root_dir/data目录下查找
+        ]
+        
+        # 存储所有找到的run_开头的目录
+        all_run_dirs = []
+        
+        # 遍历搜索目录
+        for search_dir in search_dirs:
+            try:
+                if os.path.exists(search_dir) and os.path.isdir(search_dir):
+                    run_dirs_in_search = [
+                        os.path.join(search_dir, d)
+                        for d in os.listdir(search_dir) 
+                        if os.path.isdir(os.path.join(search_dir, d)) and d.startswith("run_")
+                    ]
+                    all_run_dirs.extend(run_dirs_in_search)
+            except Exception as e:
+                print(f"⚠️ 搜索目录 {search_dir} 时出错: {str(e)}")
+        
+        # 按修改时间排序，选择最新的目录
+        if all_run_dirs:
+            all_run_dirs.sort(key=os.path.getmtime, reverse=True)
+            run_dir = all_run_dirs[0]
+            print(f"✅ 自动选择最新训练目录: {run_dir}")
+            return run_dir
+        else:
+            # 如果没找到，提供更详细的错误信息
+            searched_paths = ", ".join([os.path.join(d, "run_*") for d in search_dirs])
+            raise FileNotFoundError(f"未找到任何训练目录（需以'run_'开头）\n已搜索路径: {searched_paths}")
+
+    def get_resize_for_model(self) -> Optional[int]:
+        """
+        根据模型类型确定合适的resize参数
+        Returns:
+            适合该模型的resize值或None
+        """
+        resize = None  # 默认不需要resize
+        if self.config and "model_name" in self.config:
+            if self.config["model_name"] == "AlexNet" or self.config["model_name"] == "VGG":
+                resize = 224  # AlexNet和VGG都需要224x224输入
+            elif self.config["model_name"] == "GoogLeNet":
+                resize = 96   # GoogLeNet需要96x96输入
+        return resize
+        
+    def list_models_in_directory(self) -> None:
+        """
+        列出训练目录中的所有模型信息
+        """
+        if not self.run_dir:
+            print("⚠️ 未设置训练目录，无法列出模型")
+            return
+        
+        try:
+            models_info = FileUtils.list_models_in_dir(self.run_dir)
+            print(f"\n📋 {self.run_dir} 目录中的模型列表（按准确率排序）:")
+            print(f"{'序号':<4} {'文件名':<60} {'准确率':<10} {'轮次':<6}")
+            print("-" * 80)
+            for i, model_info in enumerate(models_info, 1):
+                # 标记当前加载的最佳模型
+                mark = "⭐" if i == 1 else " "
+                print(
+                    f"{i:<4} {model_info['filename']:<60} {model_info['accuracy']:.4f}    {model_info['epoch']:<6} {mark}")
+
+            # 提示用户可以通过model_file参数指定具体模型
+            if len(models_info) > 1:
+                print(f"\n💡 提示：使用 model_file 参数可以加载特定模型，例如:")
+                print(
+                    f"   predict --run_dir='{self.run_dir}' --model_file='{models_info[1]['filename']}'")
+        except Exception as e:
+            print(f"⚠️ 列出模型文件时出错: {str(e)}")
 
     def predict(self, X):
         """基础预测：返回预测类别（1D张量）"""
@@ -212,6 +342,8 @@ class Predictor:
         if self.config and "model_name" in self.config:
             if self.config["model_name"] == "AlexNet" or self.config["model_name"] == "VGG":
                 input_size = (1, 224, 224)
+            elif self.config["model_name"] == "GoogLeNet":
+                input_size = (1, 96, 96)
 
         print(
             f"\n🔍 测试 {num_samples} 个随机输入（{input_size[1]}x{input_size[2]}灰度图）"
@@ -243,5 +375,40 @@ class Predictor:
             print(f"⚠️ 警告: 随机预测类别较少（{unique_preds}种），模型可能未充分训练")
         else:
             print(f"✅ 随机预测类别多样（{unique_preds}种），模型状态正常")
+            
+    def run_prediction(self, batch_size: int = 256, num_samples: int = 10) -> Dict[str, Any]:
+        """
+        执行模型预测并返回结果
+        Args:
+            batch_size: 批次大小
+            num_samples: 随机测试样本数
+        Returns:
+            预测结果字典
+        """
+        # 如果有训练目录且未指定模型文件，显示该目录下的所有模型信息
+        if self.run_dir and not (self.model_path and os.path.basename(self.model_path) != FileUtils.find_best_model_in_dir(self.run_dir)):
+            self.list_models_in_directory()
+        
+        # 根据模型类型确定resize参数
+        resize = self.get_resize_for_model()
+        
+        # 加载数据（使用正确的resize参数）
+        _, test_iter = DataLoader.load_data(
+            batch_size=batch_size, resize=resize
+        )
+        
+        # 执行预测可视化
+        self.visualize_prediction(test_iter, n=num_samples)
+        self.test_random_input(num_samples=num_samples)
+        
+        # 返回预测结果信息
+        result = {
+            "success": True,
+            "model_name": self.config["model_name"] if self.config else "未知",
+            "run_dir": self.run_dir,
+            "model_path": self.model_path
+        }
+        
+        return result
 
         

@@ -1,20 +1,12 @@
 import os
 import sys
 import argparse
-from src.predictor.predictor_tool import PredictorTool
 
 # 解决OpenMP运行时库冲突问题
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
-# 导入模型并注册
-from src.models.lenet import LeNet, LeNetBatchNorm
-from src.models.alexnet import AlexNet
-from src.models.vgg import VGG
-from src.models.nin import NIN
-from src.models.googlenet import GoogLeNet
-from src.models.resnet import ResNet
-from src.models.dense_net import DenseNet  # 使用装饰器自动注册的模型
-from src.models.mlp import MLP  # 使用装饰器自动注册的模型
+# 导入增强版预测器
+from src.predictor.predictor import Predictor
 
 
 def parse_arguments():
@@ -22,11 +14,11 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="深度学习模型预测工具")
     
     # 预测模式参数
-    parser.add_argument('--run_dir', type=str, default=None,
+    parser.add_argument('--run_dir', type=str, default='data/run_20250909_204054',
                         help='训练目录路径（推荐方式）')
     parser.add_argument('--model_file', type=str, default=None,
                         help='可选，指定要加载的模型文件名，不指定则自动加载该目录下的最佳模型')
-    parser.add_argument('--model_path', type=str, default=None,
+    parser.add_argument('--model_path', type=str, default='data/run_20250909_211745/best_model_LeNet_acc_0.8398_epoch_14.pth',
                         help='完整模型文件路径（最高优先级，设置后会忽略run_dir和model_file）')
     parser.add_argument('--batch_size', type=int, default=256,
                         help='预测时的批次大小（默认256）')
@@ -43,18 +35,20 @@ def main():
     # 解析命令行参数
     args = parse_arguments()
     
-    # 创建预测工具实例
-    predictor_tool = PredictorTool()
-    
     # 执行预测
     try:
-        result = predictor_tool.run_prediction(
+        # 直接创建增强版Predictor实例
+        predictor = Predictor.create_from_args(
             run_dir=args.run_dir,
             model_file=args.model_file,
             model_path=args.model_path,
-            batch_size=args.batch_size,
-            num_samples=args.n,
             root_dir=args.root_dir
+        )
+        
+        # 执行预测
+        result = predictor.run_prediction(
+            batch_size=args.batch_size,
+            num_samples=args.n
         )
         
         print(f"✅ 预测完成")
