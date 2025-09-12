@@ -5,7 +5,14 @@ import json
 import datetime
 import argparse
 import torch
+import os
 from typing import List, Dict, Any, Optional
+
+# 导入日志工具
+from src.utils.log_utils import init_logger, info, warning, error, success, exception
+
+# 初始化日志系统
+# init_logger(log_file='batch_train.log')
 
 # 解决OpenMP运行时库冲突问题
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -88,7 +95,7 @@ class BatchTrainer:
         
         # 额外的保存目录信息（如果需要更详细的日志）
         if result["success"] and result.get("run_dir"):
-            print(f"📁 训练结果保存目录: {result['run_dir']}")
+            info(f"📁 训练结果保存目录: {result['run_dir']}")
         
         self.results.append(result)
         return result
@@ -98,24 +105,24 @@ class BatchTrainer:
         models_to_train = self.get_all_registered_models()
         
         if not models_to_train:
-            print("⚠️ 没有找到可训练的模型！")
+            warning("⚠️ 没有找到可训练的模型！")
             return []
         
-        print(f"📋 发现 {len(models_to_train)} 个可训练的模型：{', '.join(models_to_train)}")
+        info(f"📋 发现 {len(models_to_train)} 个可训练的模型：{', '.join(models_to_train)}")
         
         total_start_time = time.time()
         
         # 确保每个模型的训练过程都被独立保护，防止一个模型的异常影响整个循环
         for idx, model_name in enumerate(models_to_train, 1):
             try:
-                print(f"\n📌 开始训练第 {idx}/{len(models_to_train)} 个模型: {model_name}")
+                info(f"\n📌 开始训练第 {idx}/{len(models_to_train)} 个模型: {model_name}")
                 config = self.get_model_config(model_name)
                 self.train_model(model_name, config)
-                print(f"✅ 模型 {model_name} 训练处理完成")
+                success(f"✅ 模型 {model_name} 训练处理完成")
             except Exception as e:
                 # 这是额外的安全保障，防止train_model内部的异常处理失效
-                print(f"❌ 模型 {model_name} 训练过程出现严重错误！")
-                print(f"💬 错误详情: {str(e)}")
+                error(f"❌ 模型 {model_name} 训练过程出现严重错误！")
+                exception(f"💬 错误详情: {str(e)}")
                 
                 # 记录这个严重错误
                 self.results.append({
@@ -127,12 +134,12 @@ class BatchTrainer:
                     "success": False
                 })
                 
-                print(f"🔄 继续训练下一个模型...")
+                info(f"🔄 继续训练下一个模型...")
         
         total_time = time.time() - total_start_time
-        print(f"\n{'='*60}")
-        print(f"🏁 所有模型训练完成！总计耗时: {total_time:.2f}秒")
-        print(f"{'='*60}")
+        info(f"\n{'='*60}")
+        success(f"🏁 所有模型训练完成！总计耗时: {total_time:.2f}秒")
+        info(f"{'='*60}")
         
         return self.results
     
@@ -177,16 +184,16 @@ class BatchTrainer:
     def print_summary(self):
         """打印训练结果摘要，增强失败模型的信息展示"""
         if not self.results:
-            print("⚠️ 没有训练结果可显示！")
+            warning("⚠️ 没有训练结果可显示！")
             return
         
-        print(f"\n{'='*120}")
-        print("📊 批量训练结果摘要")
-        print(f"{'='*120}")
+        info(f"\n{'='*120}")
+        info("📊 批量训练结果摘要")
+        info(f"{'='*120}")
         # 修改表格标题，添加开始和结束时间列
-        print(f"{'模型名称':<15} {'最佳准确率':<12} {'训练时间(秒)':<12} {'开始时间':<20} {'结束时间':<20} {'状态'}")
+        info(f"{'模型名称':<15} {'最佳准确率':<12} {'训练时间(秒)':<12} {'开始时间':<20} {'结束时间':<20} {'状态'}")
 
-        print(f"{'-'*120}")
+        info(f"{'-'*120}")
         
         # 分开统计成功和失败的模型
         successful_models = []
@@ -198,8 +205,8 @@ class BatchTrainer:
             start_time = result.get("training_start_time", "-")
             end_time = result.get("training_end_time", "-")
             # 打印包含时间信息的行，修正对齐格式
-            print(f"{result['model_name']:<15} {result['best_accuracy']:<12.4f} {result['training_time']:<12.2f} {start_time:<20} {end_time:<20} {status}")
-            print()  # 在数据行之间增加一个空行
+            info(f"{result['model_name']:<15} {result['best_accuracy']:<12.4f} {result['training_time']:<12.2f} {start_time:<20} {end_time:<20} {status}")
+            info("")  # 在数据行之间增加一个空行
             
             if result["success"]:
                 successful_models.append(result)
@@ -210,23 +217,23 @@ class BatchTrainer:
         success_count = len(successful_models)
         fail_count = len(failed_models)
         
-        print(f"{'-'*120}")
-        print(f"总计: {success_count}个成功, {fail_count}个失败")
+        info(f"{'-'*120}")
+        info(f"总计: {success_count}个成功, {fail_count}个失败")
         if success_count > 0:
             avg_accuracy = sum(r["best_accuracy"] for r in successful_models) / success_count
-            print(f"平均准确率: {avg_accuracy:.4f}")
+            info(f"平均准确率: {avg_accuracy:.4f}")
         
         # 显示失败模型的详细错误信息
         if failed_models:
-            print(f"\n{'='*60}")
-            print("❌ 失败模型详情")
-            print(f"{'='*60}")
+            info(f"\n{'='*60}")
+            error("❌ 失败模型详情")
+            info(f"{'='*60}")
             for failed_model in failed_models:
-                print(f"\n模型名称: {failed_model['model_name']}")
-                print(f"错误信息: {failed_model.get('error', '未知错误')}")
-                print(f"{'='*60}")
+                error(f"\n模型名称: {failed_model['model_name']}")
+                error(f"错误信息: {failed_model.get('error', '未知错误')}")
+                info(f"{'='*60}")
         
-        print(f"{'='*60}")
+        info(f"{'='*60}")
 
 
 def parse_arguments():
@@ -280,7 +287,7 @@ def main():
                     
                     configs[model_name] = config
                 except ValueError:
-                    print(f"⚠️ 模型 '{model_name}' 没有默认配置，使用基础配置")
+                    warning(f"⚠️ 模型 '{model_name}' 没有默认配置，使用基础配置")
                     configs[model_name] = {
                         "num_epochs": args.epochs or 10,
                         "lr": args.lr or 0.01,
@@ -290,7 +297,7 @@ def main():
                         "enable_visualization": args.enable_visualization
                     }
             else:
-                print(f"❌ 模型 '{model_name}' 未注册，跳过")
+                error(f"❌ 模型 '{model_name}' 未注册，跳过")
     else:
         # 没有指定模型列表，使用命令行参数更新所有模型的默认配置
         if any([args.epochs is not None, args.lr is not None, args.batch_size is not None]):
@@ -319,20 +326,20 @@ def main():
     if args.models:
         valid_models = [m for m in args.models if ModelRegistry.is_registered(m)]
         if not valid_models:
-            print(f"❌ 没有找到有效的模型！请检查 --models 参数")
+            error(f"❌ 没有找到有效的模型！请检查 --models 参数")
         else:
-            print(f"📋 开始训练指定的 {len(valid_models)} 个模型")
+            info(f"📋 开始训练指定的 {len(valid_models)} 个模型")
             # 确保单个模型失败不影响整个批量训练过程
             for idx, model_name in enumerate(valid_models, 1):
                 try:
-                    print(f"\n📌 开始训练第 {idx}/{len(valid_models)} 个模型: {model_name}")
+                    info(f"\n📌 开始训练第 {idx}/{len(valid_models)} 个模型: {model_name}")
                     config = batch_trainer.get_model_config(model_name)
                     batch_trainer.train_model(model_name, config)
                 except Exception as e:
                     # 额外的安全保障层
-                    print(f"❌ 模型 {model_name} 处理过程出现严重错误！")
-                    print(f"💬 错误详情: {str(e)}")
-                    print(f"🔄 继续训练下一个模型...")
+                    error(f"❌ 模型 {model_name} 处理过程出现严重错误！")
+                    exception(f"💬 错误详情: {str(e)}")
+                    info(f"🔄 继续训练下一个模型...")
     else:
         # 训练所有模型
         batch_trainer.train_all_models()

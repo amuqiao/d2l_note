@@ -2,9 +2,13 @@ import os
 import sys
 import argparse
 import subprocess
+import os
 
 # 解决OpenMP运行时库冲突问题
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
+
+# 导入日志工具
+from src.utils.log_utils import init_logger, info, error
 
 
 # ========================= 主函数入口 =========================
@@ -13,6 +17,9 @@ def main():
     主函数：作为训练和预测功能的统一入口
     负责解析命令行参数并调用相应的专用脚本
     """
+    # 初始化日志系统
+    init_logger()
+    
     # 创建命令行参数解析器
     parser = argparse.ArgumentParser(description="深度学习模型训练与预测工具")
     
@@ -31,16 +38,17 @@ def main():
     if args.mode == 'train':
         train_script = os.path.join(script_dir, 'train.py')
         cmd = [sys.executable, train_script] + unknown_args
-        print(f"🚀 启动训练模式，调用: {' '.join(cmd)}")
+        info(f"🚀 启动训练模式，调用: {' '.join(cmd)}")
         subprocess.run(cmd)
         
     elif args.mode == 'predict':
         predict_script = os.path.join(script_dir, 'predict.py')
         cmd = [sys.executable, predict_script] + unknown_args
-        print(f"🚀 启动预测模式，调用: {' '.join(cmd)}")
+        info(f"🚀 启动预测模式，调用: {' '.join(cmd)}")
         subprocess.run(cmd)
         
     else:
+        error(f"不支持的模式: {args.mode}，请选择'train'/'predict'")
         raise ValueError(f"不支持的模式: {args.mode}，请选择'train'/'predict'")
 
 
