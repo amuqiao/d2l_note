@@ -276,8 +276,8 @@ class BatchTrainer:
 def parse_arguments():
     """解析命令行参数"""
     parser = argparse.ArgumentParser(description="批量训练深度学习模型工具")
-    
-    parser.add_argument('--models', type=str, nargs='+', default=["LeNet","AlexNet","VGG","NIN","GoogLeNet","ResNet","DenseNet"], help="指定要训练的模型名称列表，如 --models LeNet AlexNet")
+    # ["LeNet","AlexNet","VGG","NIN","GoogLeNet","ResNet","DenseNet"]
+    parser.add_argument('--models', type=str, nargs='+', default=["LeNet"], help="指定要训练的模型名称列表，如 --models LeNet AlexNet")
     parser.add_argument('--skip', type=str, nargs='+', help="指定要跳过的模型名称列表，如 --skip VGG ResNet")
     parser.add_argument('--epochs', type=int, help="所有模型的训练轮数")
     parser.add_argument('--lr', type=float, help="所有模型的学习率")

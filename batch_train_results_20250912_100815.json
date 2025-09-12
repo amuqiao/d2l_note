@@ -1,0 +1,22 @@
+[
+  {
+    "model_name": "LeNet",
+    "best_accuracy": 0.819,
+    "training_time": 212.3376178741455,
+    "error": null,
+    "config": {
+      "input_size": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "resize": null,
+      "lr": 0.8,
+      "batch_size": 256,
+      "num_epochs": 10
+    },
+    "success": true,
+    "run_dir": "/Users/wangqiao/Downloads/github_project/d2l_note/data/run_20250912_100443"
+  }
+]
