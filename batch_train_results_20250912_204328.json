@@ -1,0 +1,42 @@
+[
+  {
+    "model_name": "LeNet",
+    "best_accuracy": 0.6415,
+    "training_time": 38.16920518875122,
+    "error": null,
+    "config": {
+      "input_size": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "resize": null,
+      "lr": 0.8,
+      "batch_size": 256,
+      "num_epochs": 2
+    },
+    "success": true,
+    "run_dir": "/Users/wangqiao/Downloads/github_project/d2l_note/runs/run_20250912_204211"
+  },
+  {
+    "model_name": "LeNetBatchNorm",
+    "best_accuracy": 0.847,
+    "training_time": 39.264411211013794,
+    "error": null,
+    "config": {
+      "input_size": [
+        1,
+        1,
+        28,
+        28
+      ],
+      "resize": null,
+      "lr": 1.0,
+      "batch_size": 256,
+      "num_epochs": 2
+    },
+    "success": true,
+    "run_dir": "/Users/wangqiao/Downloads/github_project/d2l_note/runs/run_20250912_204249"
+  }
+]
