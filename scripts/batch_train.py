@@ -14,10 +14,9 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.utils.model_registry import ModelRegistry
-from src.trainer.trainer import Trainer
+from src.trainer.optimized_trainer import Trainer
 from src.utils.data_utils import DataLoader
 from src.utils.visualization import VisualizationTool
-from src.utils.common_train import train_model_common
 
 class BatchTrainer:
     """批量训练工具类：用于批量训练所有已注册的模型"""
@@ -63,7 +62,7 @@ class BatchTrainer:
     
     def train_model(self, model_name: str, config: Dict[str, Any]) -> Dict[str, Any]:
         """
-        训练单个模型，使用公共训练方法
+        训练单个模型，直接使用优化后的训练器
         
         Args:
             model_name: 模型名称
@@ -72,11 +71,20 @@ class BatchTrainer:
         Returns:
             训练结果字典（包含成功/失败状态和详细信息）
         """
-        # 使用公共训练方法训练模型
+        # 直接使用优化后的训练器执行训练
         enable_visualization = config.get("enable_visualization", False)
         save_every_epoch = config.get("save_every_epoch", False)
         
-        result = train_model_common(model_name, config, enable_visualization, save_every_epoch)
+        # 创建训练器实例
+        trainer = Trainer()
+        
+        # 使用训练器的run_training方法执行训练
+        result = trainer.run_training(
+            model_type=model_name,
+            config=config,
+            enable_visualization=enable_visualization,
+            save_every_epoch=save_every_epoch
+        )
         
         # 额外的保存目录信息（如果需要更详细的日志）
         if result["success"] and result.get("run_dir"):

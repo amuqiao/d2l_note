@@ -1,7 +1,7 @@
 import os
 import sys
 import argparse
-from src.trainer.trainer_tool import TrainerTool
+from src.trainer.optimized_trainer import Trainer
 from src.utils.model_registry import ModelRegistry
 
 # 解决OpenMP运行时库冲突问题
@@ -59,11 +59,11 @@ def main():
     # 解析命令行参数
     args = parse_arguments()
     
-    # 创建训练工具实例
-    trainer_tool = TrainerTool()
+    # 创建训练器实例
+    trainer = Trainer()
     
     # 获取模型配置
-    config = trainer_tool.get_model_config(
+    config = trainer.get_model_config(
         model_type=args.model_type,
         num_epochs=args.num_epochs,
         lr=args.lr,
@@ -76,7 +76,7 @@ def main():
     # 执行训练
     enable_visualization = not args.disable_visualization
     try:
-        result = trainer_tool.run_training(
+        result = trainer.run_training(
             model_type=args.model_type,
             config=config,
             enable_visualization=enable_visualization,
@@ -84,7 +84,7 @@ def main():
         )
         
         # 训练后自动预测可视化
-        trainer_tool.run_post_training_prediction(
+        trainer.run_post_training_prediction(
             run_dir=result["run_dir"],
             n=args.n,
             num_samples=10
