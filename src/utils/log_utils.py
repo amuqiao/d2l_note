@@ -66,7 +66,7 @@ class LogUtils:
             log_dir = 'logs'
             log_file = None
             log_level = 'INFO'
-            use_timestamp = True
+            use_timestamp = False
             
             # 创建日志目录
             if not os.path.exists(log_dir):
@@ -222,7 +222,7 @@ def init_logger(
     log_dir: str = 'logs', 
     log_file: str = None, 
     log_level: str = 'INFO',
-    use_timestamp: bool = True
+    use_timestamp: bool = False
 ) -> LogUtils:
     """初始化全局日志系统"""
     return LogUtils.init_logger(log_dir, log_file, log_level, use_timestamp)
