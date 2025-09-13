@@ -9,10 +9,8 @@ import os
 from typing import List, Dict, Any, Optional
 
 # 导入日志工具
-from src.utils.log_utils import init_logger, info, warning, error, success, exception
+from src.utils.log_utils import info, warning, error, success, exception
 
-# 初始化日志系统
-# init_logger(log_file='batch_train.log')
 
 # 解决OpenMP运行时库冲突问题
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
