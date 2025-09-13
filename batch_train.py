@@ -18,6 +18,17 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 # 添加项目根目录到Python路径
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
+# 导入所有模型并注册
+# 注意：这些导入会触发模型的自动注册
+from src.models.lenet import LeNet, LeNetBatchNorm
+from src.models.alexnet import AlexNet
+from src.models.vgg import VGG
+from src.models.nin import NIN
+from src.models.googlenet import GoogLeNet
+from src.models.resnet import ResNet
+from src.models.dense_net import DenseNet
+from src.models.mlp import MLP
+
 from src.utils.model_registry import ModelRegistry
 from src.trainer.trainer import Trainer
 from src.utils.data_utils import DataLoader
@@ -238,7 +249,7 @@ def parse_arguments():
     """解析命令行参数"""
     parser = argparse.ArgumentParser(description="批量训练深度学习模型工具")
     # ["LeNet","AlexNet","VGG","NIN","GoogLeNet","ResNet","DenseNet"]
-    parser.add_argument('--models', type=str, nargs='+', default=["LeNet","DenseNet"], help="指定要训练的模型名称列表，如 --models LeNet AlexNet")
+    parser.add_argument('--models', type=str, nargs='+', default=["LeNet"], help="指定要训练的模型名称列表，如 --models LeNet AlexNet")
     parser.add_argument('--skip', type=str, nargs='+', help="指定要跳过的模型名称列表，如 --skip VGG ResNet")
     parser.add_argument('--epochs', type=int, help="所有模型的训练轮数")
     parser.add_argument('--lr', type=float, help="所有模型的学习率")
@@ -250,17 +261,6 @@ def parse_arguments():
 
 def main():
     """主函数入口"""
-    # 导入所有模型并注册
-    # 注意：这些导入会触发模型的自动注册
-    from src.models.lenet import LeNet, LeNetBatchNorm
-    from src.models.alexnet import AlexNet
-    from src.models.vgg import VGG
-    from src.models.nin import NIN
-    from src.models.googlenet import GoogLeNet
-    from src.models.resnet import ResNet
-    from src.models.dense_net import DenseNet
-    from src.models.mlp import MLP
-    
     # 解析命令行参数
     args = parse_arguments()
     

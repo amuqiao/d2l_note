@@ -42,18 +42,11 @@ class Logger:
         """实现单例模式"""
         if cls._instance is None:
             cls._instance = super(Logger, cls).__new__(cls)
+            cls._instance._initialize_base()  # 只进行基础初始化，不设置处理器
         return cls._instance
     
-    def __init__(self, auto_init: bool = True):
-        """初始化日志工具
-        
-        参数:
-            auto_init: 是否自动初始化，默认为True
-        """
-        # 防止重复初始化
-        if self.__class__._initialized:
-            return
-        
+    def _initialize_base(self):
+        """基础初始化，仅设置基本属性"""
         # 创建logger实例
         self.logger = logging.getLogger(self.DEFAULT_LOGGER_NAME)
         self.logger.setLevel(logging.DEBUG)  # 默认设置为最低级别，让handler来控制
@@ -68,12 +61,18 @@ class Logger:
         # 清除已有的handler
         self._clear_all_handlers()
         
-        # 标记为已初始化
-        self.__class__._initialized = True
+    def __init__(self, auto_init: bool = False):
+        """初始化日志工具，默认不自动初始化处理器
         
-        # 自动初始化（默认启用）
-        if auto_init:
+        参数:
+            auto_init: 是否自动初始化处理器，默认为False
+        """
+        # 确保初始化逻辑只执行一次，无论__init__被调用多少次
+        if auto_init and not self.__class__._initialized:
             self._setup_default_handlers()
+            self.__class__._initialized = True
+            # 恢复打印初始化信息，作为判断初始化的信号
+            print(f"[Logger初始化] 默认日志系统已启动，日志文件: {self.log_file_path}")
     
     def _clear_all_handlers(self):
         """清除所有处理器"""
@@ -85,10 +84,11 @@ class Logger:
     
     def _setup_default_handlers(self):
         """设置默认的处理器"""
+        # 设置处理器
         self.add_console_handler()
         self.add_file_handler(use_timestamp=False)
-        # 添加简洁的打印信息
-        print(f"[Logger初始化] 默认日志系统已启动，日志文件: {self.log_file_path}")
+        
+        # 初始化信息现在在__init__方法中打印，这里不再打印
 
     @classmethod
     def is_initialized(cls) -> bool:
@@ -201,7 +201,11 @@ class Logger:
         返回:
             Logger实例
         """
-        instance = cls(auto_init=False)  # 先创建实例但不自动初始化
+        # 检查是否已经初始化，如果已初始化则直接返回实例
+        if cls._initialized:
+            return cls.get_instance()
+            
+        instance = cls(auto_init=False)  # 获取实例
         
         # 清理所有handler
         instance._clear_all_handlers()
@@ -219,10 +223,13 @@ class Logger:
         # 添加文件handler
         instance.add_file_handler(log_file_path, log_level=log_level)
         
-        # 添加简洁的打印信息
-        print(f"[Logger初始化] 自定义日志系统已启动，日志文件: {log_file_path} (控制台级别:{console_level},文件级别:{log_level})")
+        # 自定义日志初始化已完成，初始化信息在__init__方法中统一打印
         
         instance.info(f"日志系统初始化完成，日志文件: {log_file_path}")
+        
+        # 标记为已初始化
+        cls._initialized = True
+        
         return instance
     
     def debug(self, message: str, *args, **kwargs):
