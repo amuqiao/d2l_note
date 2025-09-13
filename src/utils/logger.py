@@ -14,6 +14,11 @@ class Logger:
     _instance = None
     _initialized = False
     
+    # 项目配置常量
+    DEFAULT_LOGGER_NAME = 'd2l_note'
+    DEFAULT_LOG_DIR = 'logs'
+    DEFAULT_LOG_FILE_PREFIX = 'd2l_note'
+    
     # 日志级别映射
     LOG_LEVELS = {
         'DEBUG': logging.DEBUG,
@@ -50,7 +55,7 @@ class Logger:
             return
         
         # 创建logger实例
-        self.logger = logging.getLogger('d2l_note_new')
+        self.logger = logging.getLogger(self.DEFAULT_LOGGER_NAME)
         self.logger.setLevel(logging.DEBUG)  # 默认设置为最低级别，让handler来控制
         self.logger.propagate = False  # 不继承root logger的处理器
         
@@ -81,7 +86,7 @@ class Logger:
     def _setup_default_handlers(self):
         """设置默认的处理器"""
         self.add_console_handler()
-        self.add_file_handler()
+        self.add_file_handler(use_timestamp=False)
         # 添加简洁的打印信息
         print(f"[Logger初始化] 默认日志系统已启动，日志文件: {self.log_file_path}")
 
@@ -126,7 +131,8 @@ class Logger:
         self, 
         log_file_path: Optional[str] = None, 
         log_level: str = 'DEBUG',
-        formatter: Optional[logging.Formatter] = None
+        formatter: Optional[logging.Formatter] = None,
+        use_timestamp: bool = False
     ):
         """添加文件输出处理器
         
@@ -134,6 +140,7 @@ class Logger:
             log_file_path: 日志文件路径，如果为None则自动生成
             log_level: 日志级别，默认为DEBUG
             formatter: 日志格式化器，如果为None则使用默认格式化器
+            use_timestamp: 是否在默认文件名中添加时间戳，默认为False
         """
         # 移除已有的文件处理器
         if self.file_handler:
@@ -143,9 +150,12 @@ class Logger:
         
         # 生成默认日志文件路径
         if log_file_path is None:
-            log_dir = 'logs'
-            timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
-            log_file = f'd2l_note_{timestamp}.log'
+            log_dir = self.DEFAULT_LOG_DIR
+            if use_timestamp:
+                timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S')
+                log_file = f'{self.DEFAULT_LOG_FILE_PREFIX}_{timestamp}.log'
+            else:
+                log_file = f'{self.DEFAULT_LOG_FILE_PREFIX}.log'
             log_file_path = os.path.join(log_dir, log_file)
         
         # 确保日志目录存在
@@ -172,7 +182,7 @@ class Logger:
     @classmethod
     def init(
         cls, 
-        log_dir: str = 'logs', 
+        log_dir: str = None, 
         log_file: str = None, 
         log_level: str = 'INFO',
         console_level: str = 'INFO',
@@ -182,7 +192,7 @@ class Logger:
         初始化日志系统
         
         参数:
-            log_dir: 日志文件保存目录
+            log_dir: 日志文件保存目录，默认使用DEFAULT_LOG_DIR
             log_file: 日志文件名，如果不指定则自动生成
             log_level: 文件日志级别，默认为INFO
             console_level: 控制台日志级别，默认为INFO
@@ -201,8 +211,9 @@ class Logger:
         
         # 生成日志文件路径
         if log_file is None:
+            log_dir = log_dir or cls.DEFAULT_LOG_DIR
             timestamp = datetime.datetime.now().strftime('%Y%m%d_%H%M%S') if use_timestamp else ''
-            log_file = f'd2l_note_{timestamp}.log' if timestamp else 'd2l_note.log'
+            log_file = f'{cls.DEFAULT_LOG_FILE_PREFIX}_{timestamp}.log' if timestamp else f'{cls.DEFAULT_LOG_FILE_PREFIX}.log'
         log_file_path = os.path.join(log_dir, log_file)
         
         # 添加文件handler
