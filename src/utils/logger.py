@@ -82,11 +82,8 @@ class Logger:
         """设置默认的处理器"""
         self.add_console_handler()
         self.add_file_handler()
-        # 添加打印信息
-        print(f"[Logger初始化] 默认日志系统初始化完成")
-        print(f"[Logger初始化] 日志文件路径: {self.log_file_path}")
-        print(f"[Logger初始化] 控制台日志级别: INFO")
-        print(f"[Logger初始化] 文件日志级别: DEBUG")
+        # 添加简洁的打印信息
+        print(f"[Logger初始化] 默认日志系统已启动，日志文件: {self.log_file_path}")
 
     @classmethod
     def is_initialized(cls) -> bool:
@@ -211,11 +208,8 @@ class Logger:
         # 添加文件handler
         instance.add_file_handler(log_file_path, log_level=log_level)
         
-        # 添加打印信息
-        print(f"[Logger初始化] 自定义日志系统初始化完成")
-        print(f"[Logger初始化] 日志文件路径: {log_file_path}")
-        print(f"[Logger初始化] 控制台日志级别: {console_level}")
-        print(f"[Logger初始化] 文件日志级别: {log_level}")
+        # 添加简洁的打印信息
+        print(f"[Logger初始化] 自定义日志系统已启动，日志文件: {log_file_path} (控制台级别:{console_level},文件级别:{log_level})")
         
         instance.info(f"日志系统初始化完成，日志文件: {log_file_path}")
         return instance
