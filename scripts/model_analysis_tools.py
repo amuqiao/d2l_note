@@ -7,6 +7,15 @@ import sys
 from typing import List, Dict, Optional, Any, Callable
 from functools import lru_cache  # 用于路径查找缓存
 
+# 添加项目根目录到路径，以便导入自定义模块
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
+
+# 导入自定义日志模块
+from src.utils.log_utils import get_logger
+
+# 初始化日志器
+logger = get_logger(name=__name__, log_file="logs/model_analysis.log", global_level="INFO")
+
 # 解决OpenMP运行时库冲突问题
 # 设置环境变量允许多个OpenMP运行时库共存
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -71,7 +80,7 @@ class ConfigLoader:
         try:
             return loader(file_path)
         except Exception as e:
-            print(f"⚠️ {error_prefix} {file_path}: {str(e)}")
+            logger.warning(f"{error_prefix} {file_path}: {str(e)}")
             return None
 
     @staticmethod
@@ -214,16 +223,16 @@ class ResultVisualizer:
     def print_summary_table(items: List[Dict[str, Any]], top_n: int = 10) -> None:
         """打印格式化汇总表格（适配任务级/模型级信息）"""
         if not items:
-            print("❌ 没有有效数据可展示")
+            logger.info("❌ 没有有效数据可展示")
             return
 
         is_run_summary = items[0]["type"] == "run"
         display_items = items[:top_n]
 
         # 表格标题
-        print("\n" + "=" * 120)
-        print(f"📊 分析结果汇总（共 {len(items)} 项，显示前 {len(display_items)} 项）")
-        print("=" * 120)
+        logger.info("\n" + "=" * 120)
+        logger.info(f"📊 分析结果汇总（共 {len(items)} 项，显示前 {len(display_items)} 项）")
+        logger.info("=" * 120)
 
         # 表头（按信息类型区分）
         if is_run_summary:
@@ -238,23 +247,23 @@ class ResultVisualizer:
                 "训练轮次",
                 "耗时",
             ]
-            print(
+            logger.info(
                 f"{headers[0]:<6} {headers[1]:<22} {headers[2]:<10} {headers[3]:<12} {headers[4]:<12} {headers[5]:<8} {headers[6]:<8} {headers[7]:<8} {headers[8]:<10}"
             )
         else:
             headers = ["排名", "文件名", "模型类型", "最佳准确率", "训练轮次", "路径"]
-            print(
+            logger.info(
                 f"{headers[0]:<6} {headers[1]:<40} {headers[2]:<10} {headers[3]:<12} {headers[4]:<8} {headers[5]:<30}"
             )
 
-        print("-" * 120)
+        logger.info("-" * 120)
 
         # 表格内容（带排名标记）
         for i, item in enumerate(display_items, 1):
             rank_mark = "🥇" if i == 1 else "🥈" if i == 2 else "🥉" if i == 3 else ""
 
             if is_run_summary:
-                print(
+                logger.info(
                     f"{i:<6} {os.path.basename(item['dir'])[:20]:<22} {item['model_type']:<10} "
                     f"{item['metrics']['best_acc']:.4f}    {item['metrics']['final_acc']:.4f}    "
                     f"{str(item['params']['lr']):<8} {str(item['params']['batch_size']):<8} "
@@ -267,13 +276,13 @@ class ResultVisualizer:
                     if len(item["path"]) > 30
                     else item["path"]
                 )
-                print(
+                logger.info(
                     f"{i:<6} {item['filename'][:38]:<40} {item['model_type']:<10} "
                     f"{item['metrics']['best_acc']:.4f}    {item['metrics']['epoch']:<8} "
                     f"{path_display:<30} {rank_mark}"
                 )
 
-        print("=" * 120)
+        logger.info("=" * 120)
 
     @staticmethod
     def print_statistics(items: List[Dict[str, Any]]) -> None:
@@ -283,7 +292,7 @@ class ResultVisualizer:
 
         valid_items = [item for item in items if "best_acc" in item["metrics"]]
         if not valid_items:
-            print("\n📈 统计信息: 无有效准确率数据")
+            logger.info("\n📈 统计信息: 无有效准确率数据")
             return
 
         # 计算统计指标
@@ -296,14 +305,14 @@ class ResultVisualizer:
             / len(valid_items)
         ) ** 0.5
 
-        print("\n📈 统计信息:")
-        print(f"  ├─ 最高准确率: {best_item['metrics']['best_acc']:.4f}")
-        print(f"  ├─ 平均最佳准确率: {avg_acc:.4f}")
-        print(f"  ├─ 准确率标准差: {acc_std:.4f}")
+        logger.info("\n📈 统计信息:")
+        logger.info(f"  ├─ 最高准确率: {best_item['metrics']['best_acc']:.4f}")
+        logger.info(f"  ├─ 平均最佳准确率: {avg_acc:.4f}")
+        logger.info(f"  ├─ 准确率标准差: {acc_std:.4f}")
         if items[0]["type"] == "run":
-            print(f"  └─ 最高准确率目录: {os.path.basename(best_item['dir'])}")
+            logger.info(f"  └─ 最高准确率目录: {os.path.basename(best_item['dir'])}")
         else:
-            print(f"  └─ 最高准确率模型: {best_item['filename']}")
+            logger.info(f"  └─ 最高准确率模型: {best_item['filename']}")
 
 
 class MetricsVisualizer(BaseTool):
@@ -360,29 +369,29 @@ class MetricsVisualizer(BaseTool):
     @staticmethod
     def visualize_from_run_dir(run_dir, show=True):
         """从训练目录生成动画"""
-        print(f"📂 正在从训练目录加载指标: {run_dir}")
+        logger.info(f"📂 正在从训练目录加载指标: {run_dir}")
 
         # 优先尝试从metrics.json加载
         metrics_path = os.path.join(run_dir, "metrics.json")
         if os.path.exists(metrics_path):
-            print(f"  ├─ 发现metrics.json文件")
+            logger.info(f"  ├─ 发现metrics.json文件")
             try:
                 return MetricsVisualizer.visualize_from_metrics_json(metrics_path, show)
             except Exception as e:
-                print(f"  └─ ⚠️ 从metrics.json加载失败: {str(e)}")
+                logger.info(f"  └─ ⚠️ 从metrics.json加载失败: {str(e)}")
 
         # 如果失败，尝试从epoch_metrics.json加载
         epoch_metrics_path = os.path.join(run_dir, "epoch_metrics.json")
         if os.path.exists(epoch_metrics_path):
-            print(f"  ├─ 发现epoch_metrics.json文件")
+            logger.info(f"  ├─ 发现epoch_metrics.json文件")
             try:
                 return MetricsVisualizer.visualize_from_epoch_metrics(
                     epoch_metrics_path, show
                 )
             except Exception as e:
-                print(f"  └─ ⚠️ 从epoch_metrics.json加载失败: {str(e)}")
+                logger.exception(f"  └─ ⚠️ 从epoch_metrics.json加载失败: {str(e)}")
 
-        print(f"  └─ ❌ 在目录 {run_dir} 中未找到可用的指标文件")
+        logger.info(f"  └─ ❌ 在目录 {run_dir} 中未找到可用的指标文件")
         return None
 
 
@@ -394,15 +403,15 @@ class ModelAnalysisService:
         run_dir_pattern: str = "run_*", top_n: int = 10, root_dir: str = "."
     ) -> List[Dict[str, Any]]:
         """汇总多个训练任务的结果"""
-        print(f"📊 开始汇总训练结果 (模式: {run_dir_pattern}, 根目录: {root_dir})")
+        logger.info(f"📊 开始汇总训练结果 (模式: {run_dir_pattern}, 根目录: {root_dir})")
 
         # 查找匹配目录
         run_dirs = PathScanner.find_run_directories(run_dir_pattern, root_dir)
         if not run_dirs:
-            print(f"❌ 未找到匹配 '{run_dir_pattern}' 的训练目录")
+            logger.info(f"❌ 未找到匹配 '{run_dir_pattern}' 的训练目录")
             return []
 
-        print(f"✅ 找到 {len(run_dirs)} 个匹配的训练目录")
+        logger.info(f"✅ 找到 {len(run_dirs)} 个匹配的训练目录")
 
         # 提取目录信息
         run_infos = []
@@ -411,10 +420,10 @@ class ModelAnalysisService:
             if info:
                 run_infos.append(info)
             else:
-                print(f"⚠️ 跳过无效目录: {os.path.basename(dir_path)}")
+                logger.info(f"⚠️ 跳过无效目录: {os.path.basename(dir_path)}")
 
         if not run_infos:
-            print("❌ 没有有效的训练信息可汇总")
+            logger.info("❌ 没有有效的训练信息可汇总")
             return []
 
         # 排序并展示
@@ -432,7 +441,7 @@ class ModelAnalysisService:
         model_file_pattern: str = "*.pth",
     ) -> List[Dict[str, Any]]:
         """按目录模式自动查找模型文件并比较（compare模式核心函数）"""
-        print(
+        logger.info(
             f"🔄 开始比较目录下的模型文件 "
             f"(目录模式: {dir_pattern}, 根目录: {root_dir}, 模型规则: {model_file_pattern})"
         )
@@ -440,11 +449,11 @@ class ModelAnalysisService:
         # 1. 查找符合模式的目录
         target_dirs = PathScanner.find_run_directories(dir_pattern, root_dir)
         if not target_dirs:
-            print(f"❌ 未找到匹配 '{dir_pattern}' 的目录（根目录: {root_dir}）")
+            logger.info(f"❌ 未找到匹配 '{dir_pattern}' 的目录（根目录: {root_dir}）")
             return []
-        print(f"✅ 找到 {len(target_dirs)} 个匹配目录:")
+        logger.info(f"✅ 找到 {len(target_dirs)} 个匹配目录:")
         for dir_path in target_dirs:
-            print(f"  ├─ {os.path.basename(dir_path)}")
+            logger.info(f"  ├─ {os.path.basename(dir_path)}")
 
         # 2. 收集所有目录下的模型文件（去重）
         model_files = set()
@@ -453,17 +462,17 @@ class ModelAnalysisService:
             if pth_files:
                 abs_pths = [os.path.abspath(pth) for pth in pth_files]
                 model_files.update(abs_pths)
-                print(
+                logger.info(
                     f"  ├─ 目录 {os.path.basename(dir_path)}: 找到 {len(pth_files)} 个模型文件"
                 )
             else:
-                print(f"  ├─ 目录 {os.path.basename(dir_path)}: 未找到模型文件，跳过")
+                logger.info(f"  ├─ 目录 {os.path.basename(dir_path)}: 未找到模型文件，跳过")
 
         model_files_list = list(model_files)
         if not model_files_list:
-            print("❌ 未收集到任何有效模型文件")
+            logger.info("❌ 未收集到任何有效模型文件")
             return []
-        print(f"✅ 共收集到 {len(model_files_list)} 个唯一模型文件")
+        logger.info(f"✅ 共收集到 {len(model_files_list)} 个唯一模型文件")
 
         # 3. 提取模型信息
         model_infos = []
@@ -472,10 +481,10 @@ class ModelAnalysisService:
             if info:
                 model_infos.append(info)
             else:
-                print(f"⚠️ 跳过无效模型: {os.path.basename(pth_path)}")
+                logger.info(f"⚠️ 跳过无效模型: {os.path.basename(pth_path)}")
 
         if not model_infos:
-            print("❌ 没有可比较的有效模型信息")
+            logger.info("❌ 没有可比较的有效模型信息")
             return []
 
         # 4. 排序并展示
@@ -492,7 +501,7 @@ class ModelAnalysisService:
         root_dir: str = ".",  # 根搜索目录
     ) -> List[Dict[str, Any]]:
         """比较指定模式下最新N个训练目录中的最佳模型"""
-        print(
+        logger.info(
             f"🔍 比较最新的 {num_latest} 个训练目录中的最佳模型 "
             f"(目录模式: {pattern}, 根目录: {root_dir})"
         )
@@ -500,7 +509,7 @@ class ModelAnalysisService:
         # 1. 查找符合模式的目录（按修改时间倒序）
         matched_dirs = PathScanner.find_run_directories(pattern, root_dir)
         if not matched_dirs:
-            print(f"❌ 未找到匹配 '{pattern}' 的训练目录（根目录: {root_dir}）")
+            logger.info(f"❌ 未找到匹配 '{pattern}' 的训练目录（根目录: {root_dir}）")
             return []
 
         # 按修改时间排序，取最新的num_latest个目录
@@ -508,12 +517,12 @@ class ModelAnalysisService:
         latest_dirs = sorted_dirs[:num_latest]
 
         if not latest_dirs:
-            print("❌ 没有符合条件的最新目录")
+            logger.info("❌ 没有符合条件的最新目录")
             return []
-        print(f"✅ 找到最新的 {len(latest_dirs)} 个目录:")
+        logger.info(f"✅ 找到最新的 {len(latest_dirs)} 个目录:")
         for dir_path in latest_dirs:
             mod_time = os.path.getmtime(dir_path)
-            print(
+            logger.info(
                 f"  ├─ {os.path.basename(dir_path)} (最后修改: {os.path.getctime(dir_path):.0f} 时间戳)"
             )
 
@@ -525,14 +534,14 @@ class ModelAnalysisService:
                 # 取目录中最新修改的最佳模型
                 latest_model = max(best_models, key=lambda x: os.path.getmtime(x))
                 model_files.append(latest_model)
-                print(
+                logger.info(
                     f"  ├─ 目录 {os.path.basename(dir_path)}: 最新最佳模型 {os.path.basename(latest_model)}"
                 )
             else:
-                print(f"⚠️ 目录 {os.path.basename(dir_path)}: 未找到best_model*.pth，跳过")
+                logger.info(f"⚠️ 目录 {os.path.basename(dir_path)}: 未找到best_model*.pth，跳过")
 
         if not model_files:
-            print("❌ 没有找到可比较的最佳模型文件")
+            logger.info("❌ 没有找到可比较的最佳模型文件")
             return []
 
         # 3. 提取模型信息（整合原compare_models逻辑）
@@ -542,10 +551,10 @@ class ModelAnalysisService:
             if info:
                 model_infos.append(info)
             else:
-                print(f"⚠️ 跳过无效模型文件: {os.path.basename(model_path)}")
+                logger.info(f"⚠️ 跳过无效模型文件: {os.path.basename(model_path)}")
 
         if not model_infos:
-            print("❌ 没有可比较的有效模型信息")
+            logger.info("❌ 没有可比较的有效模型信息")
             return []
 
         # 4. 排序并展示结果
@@ -569,7 +578,7 @@ class ModelAnalysisService:
         返回:
             d2l.Animator实例或None
         """
-        print("\n🎨 开始可视化训练指标...")
+        logger.info("\n🎨 开始可视化训练指标...")
 
         # 根据优先级确定数据源
         data_source = None
@@ -581,7 +590,7 @@ class ModelAnalysisService:
                 run_dir = os.path.join(root_dir, run_dir)
             data_source = run_dir
             source_type = "dir"
-            print(f"  ├─ 优先级1: 使用指定的训练目录: {data_source}")
+            logger.info(f"  ├─ 优先级1: 使用指定的训练目录: {data_source}")
         # 优先级2: 使用指定的指标文件
         elif metrics_path:
             if not os.path.isabs(metrics_path):
@@ -589,27 +598,27 @@ class ModelAnalysisService:
             data_source = metrics_path
             if metrics_path.endswith("epoch_metrics.json"):
                 source_type = "epoch_metrics"
-                print(f"  ├─ 优先级2: 使用指定的epoch_metrics.json文件: {data_source}")
+                logger.info(f"  ├─ 优先级2: 使用指定的epoch_metrics.json文件: {data_source}")
             elif metrics_path.endswith("metrics.json"):
                 source_type = "metrics"
-                print(f"  ├─ 优先级2: 使用指定的metrics.json文件: {data_source}")
+                logger.info(f"  ├─ 优先级2: 使用指定的metrics.json文件: {data_source}")
             else:
-                print(f"  └─ ❌ 不支持的指标文件类型: {metrics_path}")
+                logger.info(f"  └─ ❌ 不支持的指标文件类型: {metrics_path}")
                 return None
         # 优先级3: 自动查找最新训练目录
         else:
-            print("  ├─ 优先级3: 未指定目录或文件，自动查找最新训练目录...")
+            logger.info("  ├─ 优先级3: 未指定目录或文件，自动查找最新训练目录...")
             latest_dir = PathScanner.get_latest_run_directory("run_*", root_dir)
             if not latest_dir:
-                print("  └─ ❌ 未找到任何训练目录（需以'run_'开头）")
+                logger.info("  └─ ❌ 未找到任何训练目录（需以'run_'开头）")
                 return None
 
             data_source = latest_dir
             source_type = "dir"
-            print(f"  └─ ✅ 自动选择最新目录: {data_source}")
+            logger.info(f"  └─ ✅ 自动选择最新目录: {data_source}")
 
         # 根据数据源类型调用对应的可视化方法
-        print("  ┌─ 开始加载指标数据...")
+        logger.info("  ┌─ 开始加载指标数据...")
         if source_type == "dir":
             animator = MetricsVisualizer.visualize_from_run_dir(data_source)
         elif source_type == "epoch_metrics":
@@ -621,9 +630,9 @@ class ModelAnalysisService:
 
         # 确认结果
         if animator:
-            print("  └─ ✅ 训练指标可视化完成")
+            logger.info("  └─ ✅ 训练指标可视化完成")
         else:
-            print("  └─ ❌ 训练指标可视化失败")
+            logger.info("  └─ ❌ 训练指标可视化失败")
 
         return animator
 
