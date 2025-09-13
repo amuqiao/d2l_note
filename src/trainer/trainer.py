@@ -12,7 +12,7 @@ from src.utils.file_utils import FileUtils
 from src.utils.model_registry import ModelRegistry
 from src.utils.data_utils import DataLoader
 from src.predictor.predictor import Predictor
-from src.utils.log_utils import info, warning, error, success
+from src.utils.logger import info, warning, error, success
 
 class Trainer:
     """优化后的模型训练器（集成所有训练相关功能）"""

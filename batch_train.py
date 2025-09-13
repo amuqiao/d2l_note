@@ -9,7 +9,7 @@ import os
 from typing import List, Dict, Any, Optional
 
 # 导入日志工具
-from src.utils.log_utils import info, warning, error, success, exception
+from src.utils.logger import info, warning, error, success, exception
 
 
 # 解决OpenMP运行时库冲突问题

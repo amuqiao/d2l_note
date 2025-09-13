@@ -3,7 +3,7 @@ import sys
 import argparse
 from src.trainer.trainer import Trainer
 from src.utils.model_registry import ModelRegistry
-from src.utils.log_utils import info, error
+from src.utils.logger import info, error
 
 # 解决OpenMP运行时库冲突问题
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
