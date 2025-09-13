@@ -179,6 +179,112 @@ def integration_example():
     info(f"所有训练任务已处理完成，日志保存在: {log_dir}")
 
 
+def initialization_timing_example():
+    """日志初始化时机示例"""
+    print("\n=== 日志初始化时机示例 ===")
+    
+    # 当模块被导入时，全局logger实例已经自动创建
+    info("1. 日志模块被导入时，logger已经自动初始化")
+    info(f"   当前日志文件路径: {logger.get_log_file_path()}")
+    
+    # 场景1: 在文件开头初始化（推荐）
+    # 优点：确保所有日志都被正确记录，特别是导入模块时产生的日志
+    info("\n2. 在文件开头初始化（推荐做法）")
+    # 示例：如果这是一个新文件，我们会在顶部添加：
+    # from src.utils.log_utils import init_logger, info
+    # init_logger(log_level="INFO")
+    
+    # 场景2: 在main函数中初始化
+    # 优点：可以根据命令行参数动态配置日志
+    info("\n3. 在main函数中初始化")
+    # 示例：
+    # def main():
+    #     args = parse_args()
+    #     init_logger(log_level=args.log_level)
+    
+    # 场景3: 在需要使用日志的函数内部初始化
+    # 注意：这种方式可能会导致之前的日志丢失
+    info("\n4. 在函数内部初始化（不推荐）")
+    # 示例：
+    # def my_function():
+    #     init_logger()  # 此时之前的日志可能已丢失
+    #     info("这条日志会被记录")
+
+
+def multiple_initialization_example():
+    """重复初始化影响示例"""
+    print("\n=== 重复初始化影响示例 ===")
+    
+    # 1. 首次初始化
+    info("1. 首次初始化日志系统")
+    first_logger = init_logger(log_dir="logs", log_file="first_init.log", use_timestamp=False)
+    first_log_path = first_logger.get_log_file_path()
+    info(f"   首次初始化的日志文件: {first_log_path}")
+    
+    # 2. 再次初始化（会发生什么？）
+    info("\n2. 重复初始化日志系统")
+    second_logger = init_logger(log_dir="logs", log_file="second_init.log", use_timestamp=False)
+    second_log_path = second_logger.get_log_file_path()
+    info(f"   第二次初始化的日志文件: {second_log_path}")
+    
+    # 3. 单例模式的验证
+    info("\n3. 单例模式验证")
+    info(f"   first_logger 和 second_logger 是同一个实例: {first_logger is second_logger}")
+    info(f"   first_logger 和全局logger 是同一个实例: {first_logger is logger}")
+    
+    # 4. 重复初始化的影响
+    info("\n4. 重复初始化的潜在问题:")
+    info("   - 多个文件handler可能同时存在")
+    info("   - 日志会被写入到所有初始化过的日志文件中")
+    info("   - 多次输出初始化完成的日志消息")
+    
+    # 5. 避免重复初始化的方法
+    info("\n5. 避免重复初始化的方法:")
+    info("   - 在应用程序入口点（main函数）统一初始化一次")
+    info("   - 被其他模块导入时，不要在模块级别调用init_logger()")
+    info("   - 使用日志前检查是否已经初始化")
+    
+    # 检查当前logger的handlers数量
+    handler_count = len(logger.logger.handlers)
+    info(f"   当前logger的handler数量: {handler_count}")
+    for i, handler in enumerate(logger.logger.handlers):
+        handler_type = type(handler).__name__
+        info(f"   Handler {i+1}: {handler_type}")
+        if hasattr(handler, 'baseFilename'):
+            info(f"     文件路径: {handler.baseFilename}")
+
+
+def multi_script_integration_example():
+    """多脚本调用场景下的日志管理示例"""
+    print("\n=== 多脚本调用场景下的日志管理 ===")
+    
+    info("1. 推荐的集成模式:")
+    info("   - 主入口文件负责统一初始化日志系统")
+    info("   - 被调用的模块直接使用全局logger实例")
+    
+    # 模拟主入口文件的初始化
+    info("\n2. 模拟主入口文件初始化日志:")
+    main_logger = init_logger(log_dir="logs", log_file="main_script.log", use_timestamp=False)
+    info(f"   主脚本日志文件: {main_logger.get_log_file_path()}")
+    
+    # 模拟被调用模块使用日志
+    def simulate_module():
+        """模拟被其他模块导入的情况"""
+        # 直接使用全局logger，不需要再次初始化
+        info("   [模块内] 直接使用已初始化的全局logger")
+        debug("   [模块内] 记录一些调试信息")
+        success("   [模块内] 记录一些成功信息")
+    
+    info("\n3. 模拟被调用模块使用日志:")
+    simulate_module()
+    
+    info("\n4. 多脚本环境中的最佳实践:")
+    info("   - 只在一个地方（主入口）调用init_logger()")
+    info("   - 使用统一的日志配置")
+    info("   - 考虑为不同模块使用不同的日志名称（可选）")
+    info("   - 避免在模块级别（导入时）初始化日志")
+
+
 def main():
     """运行所有日志示例"""
     print("=== LogUtils 使用示例 ===")
@@ -197,6 +303,15 @@ def main():
     
     # 运行实际项目集成示例
     integration_example()
+    
+    # 新增：日志初始化时机示例
+    initialization_timing_example()
+    
+    # 新增：重复初始化影响示例
+    multiple_initialization_example()
+    
+    # 新增：多脚本调用场景示例
+    multi_script_integration_example()
     
     print("\n=== 日志示例运行完成 ===")
     print(f"日志文件位置: {log_file_path}")

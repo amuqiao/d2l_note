@@ -270,7 +270,8 @@ error(f"错误: {str(e)}")
 您可以运行示例文件来了解日志模块的各项功能：
 
 ```bash
-python src/utils/examples/log_example.py
+python examples/log_utils/log_example.py
+python -m examples.log_utils.log_example
 ```
 
 示例程序会展示基本日志记录、文件日志、异常日志、结构化日志等功能，并生成日志文件供您查看。
