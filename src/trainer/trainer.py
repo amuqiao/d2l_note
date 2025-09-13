@@ -12,7 +12,16 @@ from src.utils.file_utils import FileUtils
 from src.utils.model_registry import ModelRegistry
 from src.utils.data_utils import DataLoader
 from src.predictor.predictor import Predictor
-from src.utils.logger import info, warning, error, success
+from src.utils.logger_module import get_logger
+
+# 初始化日志
+logger = get_logger(
+    name="trainer",
+    log_file="logs/trainer.log",
+    global_level="DEBUG",
+    console_level="INFO",
+    file_level="DEBUG"
+)
 
 class Trainer:
     """优化后的模型训练器（集成所有训练相关功能）"""
@@ -67,12 +76,12 @@ class Trainer:
             # 确保num_epochs不是None
             if config["num_epochs"] is None:
                 config["num_epochs"] = 10  # 默认值
-                warning(f"⚠️ 警告: {model_type}的num_epochs为None，使用默认值10")
+                logger.warning(f"⚠️ 警告: {model_type}的num_epochs为None，使用默认值10")
             
             return config
         except ValueError:
             # 处理配置不存在的情况
-            warning(f"⚠️ 模型 '{model_type}' 没有默认配置，使用基础配置")
+            logger.warning(f"⚠️ 模型 '{model_type}' 没有默认配置，使用基础配置")
             return {
                 "num_epochs": kwargs.get("num_epochs", 10),
                 "lr": kwargs.get("lr", 0.01),
@@ -97,9 +106,9 @@ class Trainer:
         Returns:
             Dict: 包含训练结果的字典
         """
-        info(f"\n{'='*60}")
-        info(f"🚀 开始训练模型: {model_type}")
-        info(f"{'='*60}")
+        logger.info(f"\n{'='*60}")
+        logger.info(f"🚀 开始训练模型: {model_type}")
+        logger.info(f"{'='*60}")
         
         start_time = time.time()
         # 记录具体的开始训练时间点（日期+时间）
@@ -118,15 +127,15 @@ class Trainer:
         try:
             # 1. 创建模型
             net = ModelRegistry.create_model(model_type)
-            info(f"🔧 模型 {model_type} 创建成功")
+            logger.info(f"🔧 模型 {model_type} 创建成功")
             
             # 2. 测试网络结构
             test_func = ModelRegistry.get_test_func(model_type)
             test_func(net, input_size=config["input_size"])
-            success(f"✅ 模型 {model_type} 网络结构测试通过")
+            logger.info(f"✅ 模型 {model_type} 网络结构测试通过")
             
             # 3. 加载数据
-            info(f"📥 加载数据（batch_size={config['batch_size']}, resize={config['resize']}）")
+            logger.info(f"📥 加载数据（batch_size={config['batch_size']}, resize={config['resize']}）")
             train_iter, test_iter = DataLoader.load_data(
                 batch_size=config["batch_size"], 
                 resize=config["resize"]
@@ -161,9 +170,9 @@ class Trainer:
                 "training_end_time": training_end_time.strftime("%Y-%m-%d %H:%M:%S")
             })
             
-            success(f"🎉 {model_type} 训练完成！最佳准确率: {best_acc:.4f}，耗时: {training_time:.2f}秒")
-            info(f"⏱️ 训练开始时间: {training_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
-            info(f"⏱️ 训练结束时间: {training_end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            logger.info(f"🎉 {model_type} 训练完成！最佳准确率: {best_acc:.4f}，耗时: {training_time:.2f}秒")
+            logger.info(f"⏱️ 训练开始时间: {training_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            logger.info(f"⏱️ 训练结束时间: {training_end_time.strftime('%Y-%m-%d %H:%M:%S')}")
         
         except Exception as e:
             # 异常处理
@@ -178,9 +187,9 @@ class Trainer:
                 "training_end_time": training_end_time.strftime("%Y-%m-%d %H:%M:%S")
             })
             
-            error(f"❌ {model_type} 训练失败！错误: {error_msg}")
-            info(f"⏱️ 训练开始时间: {training_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
-            info(f"⏱️ 训练结束时间: {training_end_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            logger.error(f"❌ {model_type} 训练失败！错误: {error_msg}")
+            logger.info(f"⏱️ 训练开始时间: {training_start_time.strftime('%Y-%m-%d %H:%M:%S')}")
+            logger.info(f"⏱️ 训练结束时间: {training_end_time.strftime('%Y-%m-%d %H:%M:%S')}")
         
         return result
 
@@ -239,7 +248,7 @@ class Trainer:
         num_batches = len(train_iter)
 
         # 3. 开始训练
-        info(f"\n🚀 开始训练（设备: {self.device}，轮次: {num_epochs}）")
+        logger.info(f"\n🚀 开始训练（设备: {self.device}，轮次: {num_epochs}）")
         # 记录训练开始的具体时间点
         training_start_time = datetime.datetime.now()
         for epoch in range(num_epochs):
@@ -321,13 +330,13 @@ class Trainer:
         FileUtils.save_metrics(final_metrics, os.path.join(self.run_dir, "metrics.json"))
 
         # 6. 输出训练总结
-        info("\n" + "=" * 80)
-        info(f"📝 训练总结（目录: {self.run_dir}）")
-        info(
+        logger.info("\n" + "=" * 80)
+        logger.info(f"📝 训练总结（目录: {self.run_dir}）")
+        logger.info(
             f"loss: {train_loss:.4f} | 训练acc: {train_acc:.4f} | 测试acc: {test_acc:.4f}")
-        info(
+        logger.info(
             f"最佳acc: {self.best_test_acc:.4f} | 总时间: {total_time:.2f}s | 速度: {self.total_samples/total_time:.1f}样本/秒")
-        info("=" * 80)
+        logger.info("=" * 80)
 
         return self.run_dir, self.best_test_acc
 
@@ -340,7 +349,7 @@ class Trainer:
             n: 可视化样本数
             num_samples: 随机测试样本数
         """
-        info(f"\n🎉 训练完成，开始预测可视化（目录: {run_dir}）")
+        logger.info(f"\n🎉 训练完成，开始预测可视化（目录: {run_dir}）")
         predictor = Predictor.from_run_dir(run_dir)
         
         # 根据模型类型确定resize参数
@@ -396,9 +405,9 @@ class Trainer:
                 old_model_path = os.path.join(self.run_dir, filename)
                 try:
                     os.remove(old_model_path)
-                    info(f"🗑️ 删除旧的最佳模型: {filename}")
+                    logger.info(f"🗑️ 删除旧的最佳模型: {filename}")
                 except Exception as e:
-                    warning(f"⚠️ 删除旧模型时出错: {str(e)}")
+                    logger.warning(f"⚠️ 删除旧模型时出错: {str(e)}")
 
         # 保存新的最佳模型
         model_filename = (
@@ -418,7 +427,7 @@ class Trainer:
             model_path,
         )
 
-        info(f"📌 保存最佳模型: {model_filename}（准确率: {self.best_test_acc:.4f}）")
+        logger.info(f"📌 保存最佳模型: {model_filename}（准确率: {self.best_test_acc:.4f}）")
         return model_path
 
     def _save_epoch_model(self, epoch, current_test_acc):
@@ -440,5 +449,5 @@ class Trainer:
             model_path,
         )
 
-        info(f"💾 保存轮次模型: {model_filename}（准确率: {current_test_acc:.4f}）")
+        logger.info(f"💾 保存轮次模型: {model_filename}（准确率: {current_test_acc:.4f}）")
         return model_path

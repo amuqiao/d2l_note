@@ -3,7 +3,17 @@ import sys
 import argparse
 from src.trainer.trainer import Trainer
 from src.utils.model_registry import ModelRegistry
-from src.utils.logger import info, error, init
+from src.utils.logger_module import get_logger
+
+
+# 初始化日志，设置日志文件路径
+logger = get_logger(
+    name="train",
+    log_file="logs/train.log",  # 日志文件路径，会自动创建logs目录
+    global_level="DEBUG",     # 全局日志级别
+    console_level="INFO",     # 控制台日志级别（只输出INFO及以上）
+    file_level="DEBUG"        # 文件日志级别（输出所有级别）
+)
 
 # 解决OpenMP运行时库冲突问题
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -18,10 +28,6 @@ from src.models.googlenet import GoogLeNet
 from src.models.resnet import ResNet
 from src.models.dense_net import DenseNet  # 使用装饰器自动注册的模型
 from src.models.mlp import MLP  # 使用装饰器自动注册的模型
-
-
-# 初始化日志系统
-init()
 
 
 def parse_arguments():
@@ -64,7 +70,7 @@ def main():
     """训练脚本主函数"""
     # 解析命令行参数
     args = parse_arguments()
-    info(f"开始训练模型: {args.model_type}")
+    logger.info(f"开始训练模型: {args.model_type}")
     
     # 创建训练器实例
     trainer = Trainer()
@@ -97,10 +103,10 @@ def main():
             num_samples=10
         )
         
-        info(f"✅ 训练完成，最佳准确率: {result['best_accuracy']:.4f}")
-        info(f"📁 训练结果保存目录: {result['run_dir']}")
+        logger.info(f"✅ 训练完成，最佳准确率: {result['best_accuracy']:.4f}")
+        logger.info(f"📁 训练结果保存目录: {result['run_dir']}")
     except Exception as e:
-        error(f"❌ 训练过程出现错误: {str(e)}")
+        logger.error(f"❌ 训练过程出现错误: {str(e)}")
         sys.exit(1)
 
 
