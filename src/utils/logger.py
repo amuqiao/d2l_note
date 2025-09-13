@@ -186,7 +186,7 @@ class Logger:
         log_file: str = None, 
         log_level: str = 'INFO',
         console_level: str = 'INFO',
-        use_timestamp: bool = True
+        use_timestamp: bool = False
     ) -> 'Logger':
         """
         初始化日志系统
@@ -321,7 +321,7 @@ def init(
     log_file: str = None, 
     log_level: str = 'INFO',
     console_level: str = 'INFO',
-    use_timestamp: bool = True
+    use_timestamp: bool = False
 ) -> Logger:
     """初始化全局日志系统"""
     return Logger.init(log_dir, log_file, log_level, console_level, use_timestamp)

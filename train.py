@@ -3,7 +3,7 @@ import sys
 import argparse
 from src.trainer.trainer import Trainer
 from src.utils.model_registry import ModelRegistry
-from src.utils.logger import info, error
+from src.utils.logger import info, error, init
 
 # 解决OpenMP运行时库冲突问题
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -18,6 +18,10 @@ from src.models.googlenet import GoogLeNet
 from src.models.resnet import ResNet
 from src.models.dense_net import DenseNet  # 使用装饰器自动注册的模型
 from src.models.mlp import MLP  # 使用装饰器自动注册的模型
+
+
+# 初始化日志系统
+init()
 
 
 def parse_arguments():
