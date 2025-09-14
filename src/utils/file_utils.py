@@ -101,54 +101,109 @@ class FileUtils:
         return models_info
 
     @staticmethod
-    def find_latest_run_dir(
-        root_dir: Optional[str] = None,
-        search_dirs: Optional[List[str]] = None,
-        dir_prefix: str = "run_"
-    ) -> str:
+    def find_directories_by_pattern(
+        dir_prefix: str = "run_",
+        search_dirs: List[str] = None,
+        root_dir: Optional[str] = None
+    ) -> List[str]:
         """
-        自动查找最新的训练目录
-        Args:
-            root_dir: 根目录路径
-            search_dirs: 可选，自定义搜索目录列表
-            dir_prefix: 目录名称前缀，默认为"run_"
-        Returns:
-            最新训练目录的路径
-        """
-        if root_dir is None:
-            root_dir = os.getcwd()
+        在指定搜索目录中查找符合前缀的子目录
         
+        Args:
+            dir_prefix: 目录名称前缀，默认为"run_"
+            search_dirs: 可选，自定义搜索目录列表
+            root_dir: 可选，根目录路径，当未提供search_dirs时使用
+        
+        Returns:
+            符合条件的目录绝对路径列表
+        """
         # 如果未提供搜索目录列表，使用默认值
         if search_dirs is None:
+            if root_dir is None:
+                root_dir = os.getcwd()
             search_dirs = [
                 root_dir,  # 首先在root_dir目录下查找
                 os.path.join(root_dir, "data")  # 然后在root_dir/data目录下查找
             ]
         
         # 存储所有找到的指定前缀的目录
-        all_dirs = []
+        matching_dirs = []
         
         # 遍历搜索目录
         for search_dir in search_dirs:
             try:
                 if os.path.exists(search_dir) and os.path.isdir(search_dir):
                     dirs_in_search = [
-                        os.path.join(search_dir, d)
+                        os.path.abspath(os.path.join(search_dir, d))
                         for d in os.listdir(search_dir) 
                         if os.path.isdir(os.path.join(search_dir, d)) and d.startswith(dir_prefix)
                     ]
-                    all_dirs.extend(dirs_in_search)
+                    matching_dirs.extend(dirs_in_search)
             except Exception as e:
                 print(f"⚠️ 搜索目录 {search_dir} 时出错: {str(e)}")
         
+        return matching_dirs
+    
+    @staticmethod
+    def select_latest_directory(directories: List[str]) -> str:
+        """
+        从目录列表中选择最新创建或修改的目录
+        
+        Args:
+            directories: 目录路径列表
+            
+        Returns:
+            最新目录的路径
+            
+        Raises:
+            ValueError: 如果目录列表为空
+        """
+        if not directories:
+            raise ValueError("目录列表不能为空")
+        
         # 按修改时间排序，选择最新的目录
+        directories.sort(key=os.path.getmtime, reverse=True)
+        return directories[0]
+    
+    @staticmethod
+    def find_latest_run_dir(
+        root_dir: Optional[str] = None,
+        search_dirs: Optional[List[str]] = None,
+        dir_prefix: str = "run_"
+    ) -> str:
+        """
+        自动查找最新的训练目录（整合目录查找和选择功能）
+        
+        Args:
+            root_dir: 根目录路径
+            search_dirs: 可选，自定义搜索目录列表
+            dir_prefix: 目录名称前缀，默认为"run_"
+            
+        Returns:
+            最新训练目录的路径
+            
+        Raises:
+            FileNotFoundError: 如果未找到任何符合条件的目录
+        """
+        # 查找符合条件的目录
+        all_dirs = FileUtils.find_directories_by_pattern(
+            dir_prefix=dir_prefix,
+            search_dirs=search_dirs,
+            root_dir=root_dir
+        )
+        
+        # 选择最新的目录
         if all_dirs:
-            all_dirs.sort(key=os.path.getmtime, reverse=True)
-            latest_dir = all_dirs[0]
+            latest_dir = FileUtils.select_latest_directory(all_dirs)
             print(f"✅ 自动选择最新{dir_prefix}目录: {latest_dir}")
             return latest_dir
         else:
             # 如果没找到，提供更详细的错误信息
+            if search_dirs is None:
+                if root_dir is None:
+                    root_dir = os.getcwd()
+                search_dirs = [root_dir, os.path.join(root_dir, "data")]
+            
             searched_paths = ", ".join([os.path.join(d, f"{dir_prefix}*") for d in search_dirs])
             raise FileNotFoundError(f"未找到任何{dir_prefix}目录\n已搜索路径: {searched_paths}")
 

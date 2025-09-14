@@ -18,6 +18,16 @@ from src.utils.file_utils import FileUtils
 from src.utils.visualization import VisualizationTool
 from src.utils.data_utils import DataLoader
 
+from src.utils.log_utils import get_logger
+
+
+# 初始化日志，设置日志文件路径
+logger = get_logger(
+    name=__name__,
+    log_file=f"logs/predictor.log",  # 日志文件路径，会自动创建logs目录
+    global_level="DEBUG",     # 全局日志级别
+)
+
 # ========================= 增强版模型预测类 =========================
 class Predictor:
     """增强版模型预测类：整合了预测核心功能和高级工具功能"""
@@ -114,14 +124,14 @@ class Predictor:
             try:
                 with open(config_path, "r", encoding="utf-8") as f:
                     config = json.load(f)
-                print(f"✅ 加载配置: {os.path.basename(config_path)}")
+                logger.info(f"✅ 加载配置: {os.path.basename(config_path)}")
                 model_name = config.get("model_name", "LeNet")  # 默认LeNet
             except Exception as e:
-                print(f"⚠️ 配置文件解析失败，使用默认设置: {str(e)}")
+                logger.warning(f"⚠️ 配置文件解析失败，使用默认设置: {str(e)}")
                 model_name = "LeNet"
                 config["model_name"] = model_name
         else:
-            print("⚠️ 未找到配置文件，使用默认模型类型")
+            logger.info("⚠️ 未找到配置文件，使用默认模型类型")
             model_name = "LeNet"
             # 即使没有配置文件，也要设置model_name
             config["model_name"] = model_name
@@ -151,7 +161,7 @@ class Predictor:
 
             net.load_state_dict(checkpoint["model_state_dict"])
             best_acc = checkpoint.get("best_test_acc", 0.0)
-            print(f"✅ 加载模型: {os.path.basename(model_path)}（准确率: {best_acc:.4f}）")
+            logger.info(f"✅ 加载模型: {os.path.basename(model_path)}（准确率: {best_acc:.4f}）")
         except Exception as e:
             raise RuntimeError(f"创建模型或加载权重失败: {str(e)}") from e
 
@@ -177,7 +187,7 @@ class Predictor:
         """
         if model_path:
             # 直接从模型文件路径加载
-            print(f"🔍 模式：从模型文件直接加载")
+            logger.info(f"🔍 模式：从模型文件直接加载")
             return cls.from_model_path(model_path, device=device)
         else:
             # 如果未指定训练目录，自动选择最新目录
@@ -188,11 +198,11 @@ class Predictor:
                     os.path.join(root_dir, "data"),  # data目录
                     os.path.join(root_dir, "runs")  # runs目录
                 ]
-                print(f"🔍 搜索目录: {search_dirs}")
+                logger.info(f"🔍 搜索目录: {search_dirs}")
                 run_dir = FileUtils.find_latest_run_dir(root_dir=root_dir, search_dirs=search_dirs)
             
             # 从训练目录加载（可选择模型文件）
-            print(f"🔍 模式：从训练目录加载{', 自动选择最佳模型' if not model_file else f', 指定模型文件: {model_file}'}")
+            logger.info(f"🔍 模式：从训练目录加载{', 自动选择最佳模型' if not model_file else f', 指定模型文件: {model_file}'}")
             return cls.from_run_dir(run_dir, model_file=model_file, device=device)
 
 
@@ -205,10 +215,10 @@ class Predictor:
         """
         resize = None  # 默认不需要resize
         if self.config and "model_name" in self.config:
-            if self.config["model_name"] == "AlexNet" or self.config["model_name"] == "VGG" or "DenseNet" in self.config["model_name"]:
-                resize = 224  # AlexNet、VGG和DenseNet都需要224x224输入
-            elif self.config["model_name"] == "GoogLeNet":
-                resize = 96   # GoogLeNet需要96x96输入
+            if self.config["model_name"] == "AlexNet" or self.config["model_name"] == "VGG":
+                resize = 224  # AlexNet、VGG需要224x224输入
+            elif self.config["model_name"] == "GoogLeNet" or "DenseNet" in self.config["model_name"]:
+                resize = 96   # GoogLeNet和DenseNet需要96x96输入
             else:
                 resize = 224  # 其他模型默认224x224
         return resize
@@ -218,27 +228,27 @@ class Predictor:
         列出训练目录中的所有模型信息
         """
         if not self.run_dir:
-            print("⚠️ 未设置训练目录，无法列出模型")
+            logger.info("⚠️ 未设置训练目录，无法列出模型")
             return
         
         try:
             models_info = FileUtils.list_models_in_dir(self.run_dir)
-            print(f"\n📋 {self.run_dir} 目录中的模型列表（按准确率排序）:")
-            print(f"{'序号':<4} {'文件名':<60} {'准确率':<10} {'轮次':<6}")
-            print("-" * 80)
+            logger.info(f"\n📋 {self.run_dir} 目录中的模型列表（按准确率排序）:")
+            logger.info(f"{'序号':<4} {'文件名':<60} {'准确率':<10} {'轮次':<6}")
+            logger.info("-" * 80)
             for i, model_info in enumerate(models_info, 1):
                 # 标记当前加载的最佳模型
                 mark = "⭐" if i == 1 else " "
-                print(
+                logger.info(
                     f"{i:<4} {model_info['filename']:<60} {model_info['accuracy']:.4f}    {model_info['epoch']:<6} {mark}")
 
             # 提示用户可以通过model_file参数指定具体模型
             if len(models_info) > 1:
-                print(f"\n💡 提示：使用 model_file 参数可以加载特定模型，例如:")
-                print(
+                logger.info(f"\n💡 提示：使用 model_file 参数可以加载特定模型，例如:")
+                logger.info(
                     f"   predict --run_dir='{self.run_dir}' --model_file='{models_info[1]['filename']}'")
         except Exception as e:
-            print(f"⚠️ 列出模型文件时出错: {str(e)}")
+            logger.exception(f"⚠️ 列出模型文件时出错: {str(e)}")
 
     def predict(self, X):
         """基础预测：返回预测类别（1D张量）"""
@@ -248,7 +258,7 @@ class Predictor:
 
     def visualize_prediction(self, test_iter, n=8):
         """可视化预测结果（正确绿色/错误红色标记）"""
-        print(f"\n📊 可视化 {n} 个测试样本预测结果（设备: {self.device}）")
+        logger.info(f"\n📊 可视化 {n} 个测试样本预测结果（设备: {self.device}）")
 
         # 获取测试样本
         X, y = next(iter(test_iter))
@@ -268,10 +278,10 @@ class Predictor:
         # 确定图像尺寸 - 根据模型类型自动调整
         image_size = 28  # 默认LeNet的28×28
         if self.config and "model_name" in self.config:
-            if self.config["model_name"] == "AlexNet" or self.config["model_name"] == "VGG" or "DenseNet" in self.config["model_name"]:
-                image_size = 224  # AlexNet、VGG和DenseNet都使用224×224输入
-            elif self.config["model_name"] == "GoogLeNet":
-                image_size = 96   # GoogLeNet使用96×96输入
+            if self.config["model_name"] == "AlexNet" or self.config["model_name"] == "VGG":
+                image_size = 224  # AlexNet、VGG使用224×224输入
+            elif self.config["model_name"] == "GoogLeNet" or "DenseNet" in self.config["model_name"]:
+                image_size = 96   # GoogLeNet和DenseNet使用96×96输入
 
         # 重塑图像并显示
         X_reshaped = X.reshape((n, image_size, image_size))
@@ -289,10 +299,10 @@ class Predictor:
 
         # 输出预测详情
         correct = torch.sum(y == y_hat.cpu()).item()
-        print(f"\n📋 预测详情:")
-        print(f"真实标签: {y.tolist()} → {true_labels}")
-        print(f"预测标签: {y_hat.tolist()} → {pred_labels}")
-        print(f"预测正确率: {correct / n:.2%}（{correct}/{n}）")
+        logger.info(f"\n📋 预测详情:")
+        logger.info(f"真实标签: {y.tolist()} → {true_labels}")
+        logger.info(f"预测标签: {y_hat.tolist()} → {pred_labels}")
+        logger.info(f"预测正确率: {correct / n:.2%}（{correct}/{n}）")
 
     def test_random_input(self, num_samples=10):
         """测试随机输入（验证模型是否正常工作）"""
@@ -301,10 +311,10 @@ class Predictor:
         if self.config and "model_name" in self.config:
             if self.config["model_name"] == "AlexNet" or self.config["model_name"] == "VGG":
                 input_size = (1, 224, 224)
-            elif self.config["model_name"] == "GoogLeNet":
+            elif self.config["model_name"] == "GoogLeNet" or "DenseNet" in self.config["model_name"]:
                 input_size = (1, 96, 96)
 
-        print(
+        logger.info(
             f"\n🔍 测试 {num_samples} 个随机输入（{input_size[1]}x{input_size[2]}灰度图）"
         )
         random_X = torch.randn(num_samples, *input_size)  # 模拟随机图像
@@ -320,20 +330,20 @@ class Predictor:
             max_probs = max_probs.cpu().tolist()
         
         # 按照visualize_prediction的格式输出预测详情
-        print(f"\n📋 随机输入预测详情:")
-        print(f"预测类别: {random_preds.tolist()} → {random_labels}")
-        print(f"预测置信度: {[f'{p:.2f}' for p in max_probs]}")
+        logger.info(f"\n📋 随机输入预测详情:")
+        logger.info(f"预测类别: {random_preds.tolist()} → {random_labels}")
+        logger.info(f"预测置信度: {[f'{p:.2f}' for p in max_probs]}")
         
         # 识别高置信度预测（置信度>0.5）
         high_confidence_count = sum(1 for p in max_probs if p > 0.5)
-        print(f"高置信度预测({high_confidence_count}/{num_samples}): 置信度>0.5")
+        logger.info(f"高置信度预测({high_confidence_count}/{num_samples}): 置信度>0.5")
 
         # 检查预测多样性（避免模型输出单一类别）
         unique_preds = torch.unique(random_preds).numel()
         if unique_preds < 3:
-            print(f"⚠️ 警告: 随机预测类别较少（{unique_preds}种），模型可能未充分训练")
+            logger.info(f"⚠️ 警告: 随机预测类别较少（{unique_preds}种），模型可能未充分训练")
         else:
-            print(f"✅ 随机预测类别多样（{unique_preds}种），模型状态正常")
+            logger.info(f"✅ 随机预测类别多样（{unique_preds}种），模型状态正常")
             
     def run_prediction(self, batch_size: int = 256, num_samples: int = 10) -> Dict[str, Any]:
         """

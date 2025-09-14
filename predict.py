@@ -9,6 +9,16 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 # 导入增强版预测器
 from src.predictor.predictor import Predictor
 
+from src.utils.log_utils import get_logger
+
+
+# 初始化日志，设置日志文件路径
+logger = get_logger(
+    name=__name__,
+    log_file=f"logs/predict.log",  # 日志文件路径，会自动创建logs目录
+    global_level="DEBUG",     # 全局日志级别
+)
+
 
 def parse_arguments():
     """解析命令行参数"""
@@ -52,14 +62,14 @@ def main():
             num_samples=args.n
         )
         
-        print(f"✅ 预测完成")
-        print(f"🔍 使用的模型: {result['model_name']}")
+        logger.info(f"✅ 预测完成")
+        logger.info(f"🔍 使用的模型: {result['model_name']}")
         if result['run_dir']:
-            print(f"📁 训练目录: {result['run_dir']}")
+            logger.info(f"📁 训练目录: {result['run_dir']}")
         elif result['model_path']:
-            print(f"📁 模型文件: {result['model_path']}")
+            logger.info(f"📁 模型文件: {result['model_path']}")
     except Exception as e:
-        print(f"❌ 预测过程出现错误: {str(e)}")
+        logger.exception(f"❌ 预测过程出现错误: {str(e)}")
         sys.exit(1)
 
 
