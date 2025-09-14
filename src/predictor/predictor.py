@@ -46,20 +46,17 @@ class Predictor:
         Returns:
             Predictor实例
         """
-        # 1. 验证目录和文件
-        if not os.path.exists(run_dir):
-            raise FileNotFoundError(f"训练目录不存在: {run_dir}")
+        # 1. 验证目录
+        FileUtils.validate_directory(run_dir)
 
         config_path = os.path.join(run_dir, "config.json")
-        if not os.path.exists(config_path):
-            raise FileNotFoundError(f"配置文件缺失: {config_path}")
+        FileUtils.validate_file(config_path, ".json")
 
         # 2. 确定模型文件路径
         if model_file:
             # 使用指定的模型文件
             model_path = os.path.join(run_dir, model_file)
-            if not os.path.exists(model_path):
-                raise FileNotFoundError(f"指定的模型文件不存在: {model_path}")
+            FileUtils.validate_file(model_path, ".pth")
         else:
             # 自动选择最佳模型文件
             model_file = FileUtils.find_best_model_in_dir(run_dir)
@@ -87,13 +84,8 @@ class Predictor:
             raise ValueError("模型文件路径不能为空")
             
         # 确保路径规范化（处理相对路径和绝对路径）
-        model_path = os.path.abspath(os.path.expanduser(model_path))
-        
-        if not os.path.exists(model_path):
-            raise FileNotFoundError(f"模型文件不存在: {model_path}")
-        
-        if not model_path.endswith('.pth'):
-            raise ValueError(f"无效的模型文件格式: {model_path}，应为.pth文件")
+        model_path = FileUtils.normalize_path(model_path)
+        FileUtils.validate_file(model_path, ".pth")
 
         # 2. 加载模型（添加版本兼容性处理）
         try:
@@ -114,8 +106,7 @@ class Predictor:
         # 3. 尝试自动确定配置文件路径
         if not config_path:
             # 假设配置文件在同一目录
-            model_dir = os.path.dirname(model_path)
-            config_path = os.path.join(model_dir, "config.json")
+            config_path = FileUtils.get_config_path_from_model_path(model_path)
 
         # 4. 加载配置（如果有）
         config = {}
@@ -191,56 +182,20 @@ class Predictor:
         else:
             # 如果未指定训练目录，自动选择最新目录
             if not run_dir:
-                run_dir = cls.find_latest_run_dir(root_dir)
+                # 搜索包含/runs目录的多个位置
+                search_dirs = [
+                    root_dir,  # 当前目录
+                    os.path.join(root_dir, "data"),  # data目录
+                    os.path.join(root_dir, "runs")  # runs目录
+                ]
+                print(f"🔍 搜索目录: {search_dirs}")
+                run_dir = FileUtils.find_latest_run_dir(root_dir=root_dir, search_dirs=search_dirs)
             
             # 从训练目录加载（可选择模型文件）
             print(f"🔍 模式：从训练目录加载{', 自动选择最佳模型' if not model_file else f', 指定模型文件: {model_file}'}")
             return cls.from_run_dir(run_dir, model_file=model_file, device=device)
 
-    @staticmethod
-    def find_latest_run_dir(root_dir: Optional[str] = None) -> str:
-        """
-        自动查找最新的训练目录
-        Args:
-            root_dir: 根目录路径
-        Returns:
-            最新训练目录的路径
-        """
-        if root_dir is None:
-            root_dir = os.getcwd()
-        
-        # 定义要搜索的目录列表（优先级顺序）
-        search_dirs = [
-            root_dir,  # 首先在root_dir目录下查找
-            os.path.join(root_dir, "data")  # 然后在root_dir/data目录下查找
-        ]
-        
-        # 存储所有找到的run_开头的目录
-        all_run_dirs = []
-        
-        # 遍历搜索目录
-        for search_dir in search_dirs:
-            try:
-                if os.path.exists(search_dir) and os.path.isdir(search_dir):
-                    run_dirs_in_search = [
-                        os.path.join(search_dir, d)
-                        for d in os.listdir(search_dir) 
-                        if os.path.isdir(os.path.join(search_dir, d)) and d.startswith("run_")
-                    ]
-                    all_run_dirs.extend(run_dirs_in_search)
-            except Exception as e:
-                print(f"⚠️ 搜索目录 {search_dir} 时出错: {str(e)}")
-        
-        # 按修改时间排序，选择最新的目录
-        if all_run_dirs:
-            all_run_dirs.sort(key=os.path.getmtime, reverse=True)
-            run_dir = all_run_dirs[0]
-            print(f"✅ 自动选择最新训练目录: {run_dir}")
-            return run_dir
-        else:
-            # 如果没找到，提供更详细的错误信息
-            searched_paths = ", ".join([os.path.join(d, "run_*") for d in search_dirs])
-            raise FileNotFoundError(f"未找到任何训练目录（需以'run_'开头）\n已搜索路径: {searched_paths}")
+
 
     def get_resize_for_model(self) -> Optional[int]:
         """
@@ -250,10 +205,12 @@ class Predictor:
         """
         resize = None  # 默认不需要resize
         if self.config and "model_name" in self.config:
-            if self.config["model_name"] == "AlexNet" or self.config["model_name"] == "VGG":
-                resize = 224  # AlexNet和VGG都需要224x224输入
+            if self.config["model_name"] == "AlexNet" or self.config["model_name"] == "VGG" or "DenseNet" in self.config["model_name"]:
+                resize = 224  # AlexNet、VGG和DenseNet都需要224x224输入
             elif self.config["model_name"] == "GoogLeNet":
                 resize = 96   # GoogLeNet需要96x96输入
+            else:
+                resize = 224  # 其他模型默认224x224
         return resize
         
     def list_models_in_directory(self) -> None:
@@ -311,8 +268,10 @@ class Predictor:
         # 确定图像尺寸 - 根据模型类型自动调整
         image_size = 28  # 默认LeNet的28×28
         if self.config and "model_name" in self.config:
-            if self.config["model_name"] == "AlexNet" or self.config["model_name"] == "VGG":
-                image_size = 224
+            if self.config["model_name"] == "AlexNet" or self.config["model_name"] == "VGG" or "DenseNet" in self.config["model_name"]:
+                image_size = 224  # AlexNet、VGG和DenseNet都使用224×224输入
+            elif self.config["model_name"] == "GoogLeNet":
+                image_size = 96   # GoogLeNet使用96×96输入
 
         # 重塑图像并显示
         X_reshaped = X.reshape((n, image_size, image_size))

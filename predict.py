@@ -1,6 +1,7 @@
 import os
 import sys
 import argparse
+import os
 
 # 解决OpenMP运行时库冲突问题
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
@@ -14,18 +15,18 @@ def parse_arguments():
     parser = argparse.ArgumentParser(description="深度学习模型预测工具")
     
     # 预测模式参数
-    parser.add_argument('--run_dir', type=str, default='runs/run_20250909_204054',
+    parser.add_argument('--run_dir', type=str, default=None,
                         help='训练目录路径（推荐方式）')
     parser.add_argument('--model_file', type=str, default=None,
                         help='可选，指定要加载的模型文件名，不指定则自动加载该目录下的最佳模型')
-    parser.add_argument('--model_path', type=str, default='runs/run_20250909_211745/best_model_LeNet_acc_0.8398_epoch_14.pth',
+    parser.add_argument('--model_path', type=str, default=None,
                         help='完整模型文件路径（最高优先级，设置后会忽略run_dir和model_file）')
     parser.add_argument('--batch_size', type=int, default=256,
                         help='预测时的批次大小（默认256）')
     parser.add_argument('--n', type=int, default=10,
                         help='可视化样本数')
-    parser.add_argument('--root_dir', type=str, default=None,
-                        help='根目录路径，用于自动查找训练目录')
+    parser.add_argument('--root_dir', type=str, default=os.path.abspath('.'),
+                        help='根目录路径，用于自动查找训练目录（默认为当前目录）')
     
     return parser.parse_args()
 
