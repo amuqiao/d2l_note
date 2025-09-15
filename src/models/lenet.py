@@ -17,7 +17,7 @@ LENET_BATCHNORM_CONFIGS = {
     "resize": None,                # Fashion-MNIST原始尺寸28x28，无需Resize
     "lr": 1.0,                     # 带BatchNorm的LeNet学习率
     "batch_size": 256,             # 较小输入尺寸可支持更大批次
-    "num_epochs": 10               # 带BatchNorm通常收敛更快
+    "num_epochs": 2               # 带BatchNorm通常收敛更快
 }
 
 @ModelRegistry.register_model("LeNet", LENET_CONFIGS)
