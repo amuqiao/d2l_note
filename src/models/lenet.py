@@ -9,7 +9,7 @@ LENET_CONFIGS = {
     "resize": None,                # Fashion-MNIST原始尺寸28x28，无需Resize
     "lr": 0.8,                     # LeNet适合稍高学习率
     "batch_size": 256,             # 较小输入尺寸可支持更大批次
-    "num_epochs": 2               # 收敛较快
+    "num_epochs": 10               # 收敛较快
 }
 
 LENET_BATCHNORM_CONFIGS = {
