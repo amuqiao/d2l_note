@@ -141,9 +141,25 @@ print(predict_chars('time traveller', 10, net, vocab, device))
 # 设置训练参数
 num_epochs, lr = 500, 1.0
 
+# 保存模型
+model_save_path = 'checkpoints/rnn_model.pth'
+os.makedirs(os.path.dirname(model_save_path), exist_ok=True)
+
 # 训练模型
 print("\n开始训练模型...")
 train_model(net, train_iter, vocab, lr, num_epochs, device)
 
+
+torch.save(net.state_dict(), model_save_path)
+print(f"模型已保存到 {model_save_path}")
+
 # 显示所有图像
 plt.show()
+
+# 加载模型
+net.load_state_dict(torch.load(model_save_path))
+net.eval()
+
+# 训练结束后预测结果:
+print("训练结束后预测结果:")
+print(predict_chars('time traveller', 10, net, vocab, device))

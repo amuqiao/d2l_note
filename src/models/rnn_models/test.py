@@ -1,109 +1,66 @@
-import collections
-import re
+import torch
+from torch import nn
+from torch.nn import functional as F
 from d2l import torch as d2l
 
+batch_size, num_steps = 32, 35
+train_iter, vocab = d2l.load_data_time_machine(batch_size, num_steps)
+
+
+num_hiddens = 256
+rnn_layer = nn.RNN(len(vocab), num_hiddens)
+
+state = torch.zeros((1, batch_size, num_hiddens))
+state.shape
+
+X = torch.rand(size=(num_steps, batch_size, len(vocab)))
+Y, state_new = rnn_layer(X, state)
+Y.shape, state_new.shape
 
 #@save
-d2l.DATA_HUB['time_machine'] = (d2l.DATA_URL + 'timemachine.txt',
-                                '090b5e7e70c295757f55df93cb0a180b9691891a')
+class RNNModel(nn.Module):
+    """循环神经网络模型"""
+    def __init__(self, rnn_layer, vocab_size, **kwargs):
+        super(RNNModel, self).__init__(**kwargs)
+        self.rnn = rnn_layer
+        self.vocab_size = vocab_size
+        self.num_hiddens = self.rnn.hidden_size
+        # 如果RNN是双向的（之后将介绍），num_directions应该是2，否则应该是1
+        if not self.rnn.bidirectional:
+            self.num_directions = 1
+            self.linear = nn.Linear(self.num_hiddens, self.vocab_size)
+        else:
+            self.num_directions = 2
+            self.linear = nn.Linear(self.num_hiddens * 2, self.vocab_size)
 
-def read_time_machine():  #@save
-    """将时间机器数据集加载到文本行的列表中"""
-    with open(d2l.download('time_machine'), 'r') as f:
-        lines = f.readlines()
-    return [re.sub('[^A-Za-z]+', ' ', line).strip().lower() for line in lines]
+    def forward(self, inputs, state):
+        X = F.one_hot(inputs.T.long(), self.vocab_size)
+        X = X.to(torch.float32)
+        Y, state = self.rnn(X, state)
+        # 全连接层首先将Y的形状改为(时间步数*批量大小,隐藏单元数)
+        # 它的输出形状是(时间步数*批量大小,词表大小)。
+        output = self.linear(Y.reshape((-1, Y.shape[-1])))
+        return output, state
 
-lines = read_time_machine()
-print(f'# 文本总行数: {len(lines)}')
-print(lines[0])
-print(lines[10])
+    def begin_state(self, device, batch_size=1):
+        if not isinstance(self.rnn, nn.LSTM):
+            # nn.GRU以张量作为隐状态
+            return  torch.zeros((self.num_directions * self.rnn.num_layers,
+                                 batch_size, self.num_hiddens),
+                                device=device)
+        else:
+            # nn.LSTM以元组作为隐状态
+            return (torch.zeros((
+                self.num_directions * self.rnn.num_layers,
+                batch_size, self.num_hiddens), device=device),
+                    torch.zeros((
+                        self.num_directions * self.rnn.num_layers,
+                        batch_size, self.num_hiddens), device=device))
 
+device = d2l.try_gpu()
+net = RNNModel(rnn_layer, vocab_size=len(vocab))
+net = net.to(device)
+d2l.predict_ch8('time traveller', 10, net, vocab, device)
 
-def tokenize(lines, token='word'):  #@save
-    """将文本行拆分为单词或字符词元"""
-    if token == 'word':
-        return [line.split() for line in lines]
-    elif token == 'char':
-        return [list(line) for line in lines]
-    else:
-        print('错误：未知词元类型：' + token)
-
-tokens = tokenize(lines)
-for i in range(11):
-    print(tokens[i])
-
-
-class Vocab:  #@save
-    """文本词表"""
-    def __init__(self, tokens=None, min_freq=0, reserved_tokens=None):
-        if tokens is None:
-            tokens = []
-        if reserved_tokens is None:
-            reserved_tokens = []
-        # 按出现频率排序
-        counter = count_corpus(tokens)
-        self._token_freqs = sorted(counter.items(), key=lambda x: x[1],
-                                   reverse=True)
-        # 未知词元的索引为0
-        self.idx_to_token = ['<unk>'] + reserved_tokens
-        self.token_to_idx = {token: idx
-                             for idx, token in enumerate(self.idx_to_token)}
-        for token, freq in self._token_freqs:
-            if freq < min_freq:
-                break
-            if token not in self.token_to_idx:
-                self.idx_to_token.append(token)
-                self.token_to_idx[token] = len(self.idx_to_token) - 1
-
-    def __len__(self):
-        return len(self.idx_to_token)
-
-    def __getitem__(self, tokens):
-        if not isinstance(tokens, (list, tuple)):
-            return self.token_to_idx.get(tokens, self.unk)
-        return [self.__getitem__(token) for token in tokens]
-
-    def to_tokens(self, indices):
-        if not isinstance(indices, (list, tuple)):
-            return self.idx_to_token[indices]
-        return [self.idx_to_token[index] for index in indices]
-
-    @property
-    def unk(self):  # 未知词元的索引为0
-        return 0
-
-    @property
-    def token_freqs(self):
-        return self._token_freqs
-
-def count_corpus(tokens):  #@save
-    """统计词元的频率"""
-    # 这里的tokens是1D列表或2D列表
-    if len(tokens) == 0 or isinstance(tokens[0], list):
-        # 将词元列表展平成一个列表
-        tokens = [token for line in tokens for token in line]
-    return collections.Counter(tokens)
-
-vocab = Vocab(tokens)
-print(list(vocab.token_to_idx.items())[:10])
-
-
-for i in [0, 10]:
-    print('文本:', tokens[i])
-    print('索引:', vocab[tokens[i]])
-
-
-def load_corpus_time_machine(max_tokens=-1):  #@save
-    """返回时光机器数据集的词元索引列表和词表"""
-    lines = read_time_machine()
-    tokens = tokenize(lines, 'char')
-    vocab = Vocab(tokens)
-    # 因为时光机器数据集中的每个文本行不一定是一个句子或一个段落，
-    # 所以将所有文本行展平到一个列表中
-    corpus = [vocab[token] for line in tokens for token in line]
-    if max_tokens > 0:
-        corpus = corpus[:max_tokens]
-    return corpus, vocab
-
-corpus, vocab = load_corpus_time_machine()
-len(corpus), len(vocab)
+num_epochs, lr = 500, 1
+d2l.train_ch8(net, train_iter, vocab, lr, num_epochs, device)
