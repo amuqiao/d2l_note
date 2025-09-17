@@ -99,17 +99,7 @@ def analyze_token_frequency(vocab, corpus):
         legend=['一元词', '二元词', '三元词']
     )
 
-# 演示代码：仅在直接运行该文件时执行
-if __name__ == "__main__":
-    # 加载数据并创建词表
-    corpus, vocab = load_and_preprocess_data()
 
-    # 查看词表中频率最高的10个词
-    print("词表中频率最高的10个词：")
-    print(vocab.token_freqs[:10])
-    
-    # 执行词频分析
-    analyze_token_frequency(vocab, corpus)
 
 
 # --------------------------
@@ -263,4 +253,15 @@ def load_data_time_machine(batch_size, num_steps, use_random_iter=False, max_tok
     """
     data_iter = SeqDataLoader(batch_size, num_steps, use_random_iter, max_tokens)
     return data_iter, data_iter.vocab
+
+# 演示代码：仅在直接运行该文件时执行
+if __name__ == "__main__":
+    # 加载数据并创建词表
+    corpus, vocab = load_and_preprocess_data()
+
+    # 查看词表中频率最高的10个词
+    print("词表中频率最高的10个词：")
+    print(vocab.token_freqs[:10])
     
+    # 执行词频分析
+    analyze_token_frequency(vocab, corpus)
