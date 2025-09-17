@@ -76,14 +76,14 @@ def analyze_token_frequency(vocab, corpus):
     )
     
     # 生成二元词并计算频率
-    bigram_tokens = [pair for pair in zip(corpus[:-1], corpus[1:])]
+    bigram_tokens = [' '.join(pair) for pair in zip(corpus[:-1], corpus[1:])]
     bigram_vocab = d2l.Vocab(bigram_tokens)
     bigram_freqs = [freq for token, freq in bigram_vocab.token_freqs]
     print("\n二元词中频率最高的10个词对：")
     print(bigram_vocab.token_freqs[:10])
     
     # 生成三元词并计算频率
-    trigram_tokens = [triple for triple in zip(corpus[:-2], corpus[1:-1], corpus[2:])]
+    trigram_tokens = [' '.join(triple) for triple in zip(corpus[:-2], corpus[1:-1], corpus[2:])]
     trigram_vocab = d2l.Vocab(trigram_tokens)
     trigram_freqs = [freq for token, freq in trigram_vocab.token_freqs]
     print("\n三元词中频率最高的10个词组合：")
