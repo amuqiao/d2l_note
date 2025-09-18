@@ -1,0 +1,30 @@
+flowchart TD
+    %% 定义样式类
+    classDef styleA fill:#F9E79F,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
+    classDef styleB fill:#A9DFBF,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
+    classDef styleC fill:#81D4FA,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
+    classDef styleD fill:#F8BBD0,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
+    classDef styleE fill:#D1C4E9,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
+    classDef styleF fill:#FFCCBC,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
+    classDef styleG fill:#C8E6C9,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
+    classDef styleH fill:#E0F7FA,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
+    
+    %% 流程图节点
+    A[解析 metadata.json] --> B[遍历样本]
+    B --> C[提取元数据信息]
+    C --> D[加载时序数据 CSV]
+    D --> E[创建临时 DataFrame]
+    E --> F[数据清洗与插值]
+    F --> G[写入 HDF5 文件]
+    G --> H[释放内存]
+    H --> B
+    
+    %% 绑定样式类
+    class A styleA;
+    class B styleB;
+    class C styleC;
+    class D styleD;
+    class E styleE;
+    class F styleF;
+    class G styleG;
+    class H styleH;
