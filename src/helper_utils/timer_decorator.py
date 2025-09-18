@@ -1,7 +1,7 @@
 import datetime
 import functools
 
-def timer_decorator(func):
+def time_it(func):
     """
     统计函数运行时间的装饰器
     
@@ -35,7 +35,7 @@ def timer_decorator(func):
 
 # 示例用法
 if __name__ == "__main__":
-    @timer_decorator
+    @time_it
     def test_function(seconds):
         """测试函数，模拟耗时操作"""
         import time
@@ -46,7 +46,7 @@ if __name__ == "__main__":
     test_function(1)
     test_function(0.5)
     
-    @timer_decorator
+    @time_it
     def calculate_sum(n):
         """计算1到n的和"""
         return sum(range(n+1))
