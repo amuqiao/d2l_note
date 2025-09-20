@@ -13,6 +13,9 @@ sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 # 导入自定义日志模块
 from src.utils.log_utils import get_logger
 
+# 导入自定义字体工具
+from src.helper_utils.font_utils import setup_matplotlib_font
+
 # 初始化日志器
 logger = get_logger(name=__name__, log_file="logs/model_analysis.log", global_level="INFO")
 
@@ -26,14 +29,8 @@ class BaseTool:
 
     @staticmethod
     def setup_font():
-        """配置matplotlib中文显示"""
-        if sys.platform.startswith("win"):
-            plt.rcParams["font.family"] = ["SimHei", "Microsoft YaHei"]
-        elif sys.platform.startswith("darwin"):
-            plt.rcParams["font.family"] = ["Arial Unicode MS", "Heiti TC"]
-        elif sys.platform.startswith("linux"):
-            plt.rcParams["font.family"] = ["Droid Sans Fallback", "DejaVu Sans", "sans-serif"]
-        plt.rcParams["axes.unicode_minus"] = False  # 正确显示负号
+        """配置matplotlib中文显示（调用外部工具实现）"""
+        setup_matplotlib_font()
 
 
 class PathScanner:
