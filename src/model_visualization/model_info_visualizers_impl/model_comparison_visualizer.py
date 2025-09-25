@@ -7,6 +7,7 @@ from typing import List, Optional
 from src.model_visualization.data_models import ModelInfoData
 from src.helper_utils.helper_tools_registry import ToolRegistry
 from src.utils.log_utils import get_logger
+from prettytable import PrettyTable
 
 # 导入基类
 from src.model_visualization.model_info_visualizers import BaseModelInfoVisualizer
@@ -43,18 +44,18 @@ class ModelComparisonVisualizer(BaseModelInfoVisualizer):
             logger.warning(f"无效的排序方式: {sort_by}，将使用默认值 'accuracy'")
     
     def visualize(self, model_info: ModelInfoData = None, show: bool = True, 
-                  figsize: tuple = (15, 10), plot_type: str = "all") -> Optional[plt.Figure]:
+                  figsize: tuple = (15, 10), plot_type: str = "all") -> Optional[object]:
         """
         可视化模型准确率比较
         
         参数:
             model_info: 可选的模型信息对象
-            show: 是否显示图表
-            figsize: 图表大小
-            plot_type: 图表类型，可选值: "all" (全部), "bar" (柱状图), "ranking" (排名图), "scatter" (散点图)
+            show: 是否显示图表/表格
+            figsize: 图表大小（表格模式下忽略）
+            plot_type: 比较类型，可选值: "all" (全部), "bar" (柱状图), "ranking" (排名表格), "scatter" (散点图)
         
         返回:
-            matplotlib.pyplot.Figure: 生成的图表对象
+            表格对象或None
         """
         try:
             # 如果传入了model_info，添加到比较列表
@@ -65,34 +66,6 @@ class ModelComparisonVisualizer(BaseModelInfoVisualizer):
             if len(self.model_infos) < 2:
                 logger.warning("模型比较需要至少2个模型信息")
                 return None
-            
-            # 改进字体设置，确保中文正常显示
-            try:
-                # 使用工具注册中心设置字体
-                ToolRegistry.call("setup_font")
-                logger.info("成功调用ToolRegistry的setup_font方法")
-            except Exception as e:
-                logger.warning(f"调用ToolRegistry的setup_font失败: {str(e)}")
-                
-                # 手动设置中文字体，支持多种常见中文字体
-                for font in ['SimHei', 'WenQuanYi Micro Hei', 'Heiti TC', 'Arial Unicode MS']:
-                    try:
-                        plt.rcParams["font.family"] = [font, "sans-serif"]
-                        # 测试字体是否可用
-                        plt.figure().text(0.5, 0.5, "测试中文字体")
-                        plt.close()
-                        logger.info(f"成功设置中文字体: {font}")
-                        break
-                    except:
-                        continue
-                else:
-                    logger.warning("未能设置特定中文字体，使用系统默认字体")
-                    plt.rcParams["font.family"] = ["sans-serif"]
-            
-            plt.rcParams["axes.unicode_minus"] = False  # 确保负号能够正确显示
-            
-            # 记录当前的字体配置，用于调试
-            logger.info(f"当前字体配置: {plt.rcParams['font.family']}")
             
             # 准备比较数据
             model_data = []
@@ -151,215 +124,87 @@ class ModelComparisonVisualizer(BaseModelInfoVisualizer):
             train_times = [d["train_time"] for d in model_data]
             params_counts = [max(1, d["params"]) for d in model_data]  # 确保至少为1，避免对数刻度问题
             
-            # 创建图表
-            if plot_type == "all":
-                fig, axes = plt.subplots(2, 2, figsize=figsize)
-            elif plot_type == "bar":
-                fig, axes = plt.subplots(1, 1, figsize=figsize)
-                axes = np.array([[axes]])
-            elif plot_type == "ranking":
-                fig, axes = plt.subplots(1, 1, figsize=figsize)
-                axes = np.array([[axes]])
-            elif plot_type == "scatter":
-                fig, axes = plt.subplots(1, 1, figsize=figsize)
-                axes = np.array([[axes]])
-            else:
-                fig, axes = plt.subplots(2, 2, figsize=figsize)
+            # 计算准确率差异（泛化能力）
+            acc_diffs = [test - train for test, train in zip(test_accs, train_accs)]
             
-            # 1. 准确率比较（柱状图，支持训练、验证、测试准确率）
-            if plot_type in ["all", "bar"]:
-                # 设置条形宽度
-                bar_width = 0.25
-                x = np.arange(len(model_names))
+            # 仅实现ranking模式（表格输出），其他模式暂不实现
+            if plot_type == "ranking":
+                # 使用PrettyTable创建表格
+                table = PrettyTable()
                 
-                # 绘制三种准确率的条形图
-                train_bars = axes[0, 0].bar(x - bar_width, train_accs, bar_width, label='训练准确率')
-                val_bars = axes[0, 0].bar(x, val_accs, bar_width, label='验证准确率')
-                test_bars = axes[0, 0].bar(x + bar_width, test_accs, bar_width, label='测试准确率')
+                # 设置表格标题
+                print("\n" + "="*80)
+                print("📊 模型准确率详细排名比较")
+                print("="*80)
                 
-                axes[0, 0].set_ylabel('准确率')
-                axes[0, 0].set_title('模型准确率详细比较')
-                axes[0, 0].set_xticks(x)
-                axes[0, 0].set_xticklabels(model_names, rotation=45, ha='right')
-                axes[0, 0].set_ylim(0, 1.1)
-                axes[0, 0].legend()
+                # 设置表格字段
+                table.field_names = ["排名", "模型名称", "测试准确率", "训练准确率", "验证准确率", "准确率差异", "参数量", "训练时间"]
                 
-                # 标注测试准确率数值（最重要的指标）
-                for i, v in enumerate(test_accs):
-                    axes[0, 0].text(i + bar_width, v + 0.02, f'{v:.4f}', ha='center')
+                # 设置表格对齐方式
+                table.align["模型名称"] = "l"  # 左对齐
+                table.align["测试准确率"] = "r"
+                table.align["训练准确率"] = "r"
+                table.align["验证准确率"] = "r"
+                table.align["准确率差异"] = "r"
+                table.align["参数量"] = "r"
+                table.align["训练时间"] = "r"
                 
-                if plot_type == "bar":
-                    fig.suptitle("模型准确率比较", fontsize=16)
-            
-            # 2. 测试准确率排名图 - 增强版，专注于比较模型准确率
-            if plot_type in ["all", "ranking"]:
-                # 使用水平条形图显示排名
-                if plot_type == "all":
-                    rank_ax = axes[0, 1]
-                else:
-                    rank_ax = axes[0, 0]
-                
-                # 反转顺序，使最高分在顶部
-                reversed_names = model_names[::-1]
-                reversed_accs = test_accs[::-1]
-                reversed_train_accs = train_accs[::-1]
-                reversed_val_accs = val_accs[::-1]
-                
-                # 计算准确率差异（泛化能力）
-                acc_diffs = [test - train for test, train in zip(test_accs, train_accs)]
-                reversed_acc_diffs = acc_diffs[::-1]
-                
-                # 确定图表高度，为更多信息留出空间
-                if plot_type == "ranking":
-                    # 为增强版排名图增加高度
-                    fig.set_figheight(max(figsize[1], 1.5 * len(model_names)))
-                
-                # 使用渐变色显示，强调准确率差异
-                colors = []
-                for acc_diff in reversed_acc_diffs:
-                    if acc_diff > 0:
-                        # 测试准确率高于训练准确率，绿色系
-                        colors.append(plt.cm.Greens(0.3 + min(0.7, acc_diff * 10)))
-                    elif acc_diff < 0:
-                        # 测试准确率低于训练准确率，红色系
-                        colors.append(plt.cm.Reds(0.3 + min(0.7, abs(acc_diff) * 10)))
-                    else:
-                        # 准确率一致，中性色
-                        colors.append(plt.cm.Greys(0.5))
-                
-                # 绘制主条形图（测试准确率）
-                bars = rank_ax.barh(reversed_names, reversed_accs, color=colors, height=0.6, alpha=0.8, label='测试准确率')
-                
-                # 绘制训练准确率和验证准确率的线（作为参考）
-                for i, (train_acc, val_acc) in enumerate(zip(reversed_train_accs, reversed_val_accs)):
-                    if train_acc > 0:
-                        rank_ax.axvline(x=train_acc, ymin=i/len(reversed_names) + 0.1/len(reversed_names), 
-                                        ymax=(i+1)/len(reversed_names) - 0.1/len(reversed_names), 
-                                        color='blue', linestyle='--', alpha=0.6, linewidth=1)
-                        # 添加训练准确率标签
-                        rank_ax.text(train_acc + 0.005, i, f'T: {train_acc:.3f}', va='center', fontsize=7, color='blue')
-                    if val_acc > 0:
-                        rank_ax.axvline(x=val_acc, ymin=i/len(reversed_names) + 0.3/len(reversed_names), 
-                                        ymax=(i+1)/len(reversed_names) - 0.3/len(reversed_names), 
-                                        color='purple', linestyle=':', alpha=0.6, linewidth=1)
-                        # 添加验证准确率标签
-                        rank_ax.text(val_acc + 0.005, i, f'V: {val_acc:.3f}', va='center', fontsize=7, color='purple')
-                
-                rank_ax.set_xlabel('准确率')
-                rank_ax.set_title('模型准确率详细排名比较')
-                rank_ax.set_xlim(0, 1.1)
-                
-                # 添加图例
-                rank_ax.legend(['测试准确率', '训练准确率', '验证准确率'], loc='upper right')
-                
-                # 添加详细指标
-                for i, (v, acc_diff, params, time) in enumerate(zip(reversed_accs, reversed_acc_diffs, 
-                                                                   params_counts[::-1], train_times[::-1])):
-                    # 准确率数值
-                    rank_ax.text(v + 0.01, i, f'测试: {v:.4f}', va='center', fontsize=8)
-                    # 排名标记
-                    rank_ax.text(0.01, i, f'#{len(model_names) - i}', va='center', fontweight='bold')
-                    # 准确率差异标记
-                    diff_text = f'差异: {acc_diff:+.3f}'
-                    diff_color = 'green' if acc_diff > 0 else 'red' if acc_diff < 0 else 'gray'
-                    rank_ax.text(0.7, i, diff_text, va='center', fontsize=7, color=diff_color)
-                
-                if plot_type == "ranking":
-                    fig.suptitle("模型准确率详细排名比较", fontsize=16)
-            
-            # 3. 准确率-时间权衡散点图（增强版）
-            if plot_type in ["all", "scatter"]:
-                if plot_type == "all":
-                    scatter_ax = axes[1, 0]
-                else:
-                    scatter_ax = axes[0, 0]
-                
-                # 使用参数量作为点的大小
-                sizes = [min(1000, p / 10000) for p in params_counts]  # 缩放参数量以适合点大小
-                
-                # 使用准确率作为颜色
-                scatter = scatter_ax.scatter(train_times, test_accs, s=sizes, c=test_accs, 
-                                           cmap='viridis', alpha=0.7, edgecolors='w', linewidths=1)
-                
-                # 添加颜色条
-                cbar = plt.colorbar(scatter, ax=scatter_ax)
-                cbar.set_label('测试准确率')
-                
-                scatter_ax.set_xlabel('训练时间 (秒)')
-                scatter_ax.set_ylabel('测试准确率')
-                scatter_ax.set_title('准确率-时间-参数量权衡分析')
-                scatter_ax.set_ylim(0, 1.1)
-                
-                # 智能放置标签，避免重叠
-                self._annotate_points_without_overlap(scatter_ax, train_times, test_accs, model_names)
-                
-                if plot_type == "scatter":
-                    fig.suptitle("模型准确率-时间-参数量权衡分析", fontsize=16)
-            
-            # 4. 模型信息摘要表格
-            if plot_type == "all":
-                # 创建一个表格来展示模型的关键指标
-                metrics_table_ax = axes[1, 1]
-                metrics_table_ax.axis('off')  # 隐藏坐标轴
-                
-                # 准备表格数据
-                table_data = []
-                for i, data in enumerate(model_data):
-                    rank = i + 1
-                    name = data["name"] if len(data["name"]) <= 12 else data["name"][:9] + "..."
-                    test_acc = f"{data['test_acc']:.4f}"
-                    params = f"{data['params']:,}"
-                    time = f"{data['train_time']:.1f}s" if data['train_time'] > 0 else "N/A"
+                # 添加数据行
+                for i, data in enumerate(model_data, 1):
+                    # 格式化参数量
+                    params_formatted = f"{data['params']:,}" if data['params'] > 0 else "N/A"
                     
-                    table_data.append([rank, name, test_acc, params, time])
-                
-                # 创建表格
-                table = metrics_table_ax.table(cellText=table_data, 
-                                              colLabels=["排名", "模型", "测试准确率", "参数量", "训练时间"],
-                                              loc='center', cellLoc='center')
+                    # 格式化训练时间
+                    time_formatted = f"{data['train_time']:.1f}s" if data['train_time'] > 0 else "N/A"
+                    
+                    # 计算准确率差异
+                    acc_diff = data['test_acc'] - data['train_acc']
+                    acc_diff_formatted = f"{acc_diff:+.4f}"
+                    
+                    # 添加行数据
+                    table.add_row([
+                        i,
+                        data['name'],
+                        f"{data['test_acc']:.4f}",
+                        f"{data['train_acc']:.4f}" if data['train_acc'] > 0 else "N/A",
+                        f"{data['val_acc']:.4f}" if data['val_acc'] > 0 else "N/A",
+                        acc_diff_formatted,
+                        params_formatted,
+                        time_formatted
+                    ])
                 
                 # 设置表格样式
-                table.auto_set_font_size(False)
-                table.set_fontsize(10)
-                table.scale(1.2, 1.5)  # 调整表格大小
+                table.border = True
+                table.header = True
+                table.padding_width = 1
                 
-                # 突出显示第一行
-                for (row, col), cell in table.get_celld().items():
-                    if row == 0:  # 表头
-                        cell.set_fontsize(11)
-                        cell.set_fontweight('bold')
-                    if row == 1 and col != -1:  # 第一名
-                        cell.set_facecolor('#d4edda')
-                        cell.set_fontweight('bold')
+                # 打印表格
+                if show:
+                    print(table)
+                    
+                    # 添加摘要统计信息
+                    max_acc_idx = test_accs.index(max(test_accs))
+                    min_acc_idx = test_accs.index(min(test_accs))
+                    
+                    print("\n" + "="*80)
+                    print("📋 模型比较摘要")
+                    print("="*80)
+                    print(f"🏆 最佳模型: {model_data[max_acc_idx]['name']} (准确率: {test_accs[max_acc_idx]:.4f})")
+                    print(f"📉 最差模型: {model_data[min_acc_idx]['name']} (准确率: {test_accs[min_acc_idx]:.4f})")
+                    print(f"📊 平均准确率: {sum(test_accs) / len(test_accs):.4f}")
+                    print(f"📏 准确率范围: {max(test_accs) - min(test_accs):.4f}")
+                    print("="*80)
                 
-                metrics_table_ax.set_title('模型关键指标摘要', pad=20)
+                return table
+            else:
+                # 其他模式的实现可以在后续添加
+                logger.info(f"模式 '{plot_type}' 尚未实现表格输出")
+                print(f"⚠️ 警告：'{plot_type}' 模式尚未实现表格输出，请使用 'ranking' 模式")
+                return None
             
-            # 设置整体标题
-            if plot_type == "all":
-                fig.suptitle("模型准确率比较分析报告", fontsize=16, y=0.98)
-            
-            # 优化布局管理
-            try:
-                # 针对不同的图表类型调整布局参数
-                if plot_type == "ranking":
-                    # 为排名图增加底部空间和左侧空间以适应长标签
-                    plt.tight_layout(rect=[0.15, 0.1, 0.95, 0.96])
-                else:
-                    plt.tight_layout(rect=[0, 0, 1, 0.96])
-            except Exception as e:
-                logger.warning(f"设置tight_layout失败: {str(e)}")
-                # 如果失败，使用subplots_adjust替代，并根据图表类型调整参数
-                if plot_type == "ranking":
-                    plt.subplots_adjust(left=0.15, right=0.95, bottom=0.15, top=0.92)
-                else:
-                    plt.subplots_adjust(left=0.05, right=0.95, bottom=0.15, top=0.92, wspace=0.2, hspace=0.3)
-            
-            if show:
-                plt.show()
-            
-            return fig
         except Exception as e:
             logger.error(f"绘制模型比较可视化失败: {str(e)}")
+            print(f"❌ 模型比较过程出错: {str(e)}")
             return None
     
     def _get_model_name(self, model_info: ModelInfoData) -> str:
@@ -393,26 +238,6 @@ class ModelComparisonVisualizer(BaseModelInfoVisualizer):
         if len(path_basename) > 15:
             return path_basename[:12] + '...'
         return path_basename
-    
-    def _annotate_points_without_overlap(self, ax, x, y, labels):
-        """智能标注散点图点，避免标签重叠"""
-        # 简单实现：对于密集区域，只标注极值点
-        if len(x) <= 10:
-            # 少量点，全部标注
-            for i, (xi, yi, label) in enumerate(zip(x, y, labels)):
-                ax.annotate(label, (xi, yi), xytext=(5, 5), textcoords='offset points', 
-                            fontsize=8, bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.7))
-        else:
-            # 大量点，只标注极值点
-            max_acc_idx = y.index(max(y))
-            min_acc_idx = y.index(min(y))
-            max_time_idx = x.index(max(x))
-            min_time_idx = x.index(min(x))
-            
-            # 确保索引唯一
-            unique_indices = list(set([max_acc_idx, min_acc_idx, max_time_idx, min_time_idx]))
-            
-            for idx in unique_indices:
-                ax.annotate(labels[idx], (x[idx], y[idx]), xytext=(5, 5), textcoords='offset points',
-                            fontsize=9, fontweight='bold',
-                            bbox=dict(boxstyle="round,pad=0.3", fc="white", ec="gray", alpha=0.9))
+
+# 保持原有导入用于兼容其他代码
+import matplotlib.pyplot as plt

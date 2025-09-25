@@ -4,7 +4,9 @@ import argparse
 import glob
 import fnmatch
 # 添加项目根目录到Python路径
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))  # 确保这行正确添加了项目根目录
+sys.path.append(os.path.dirname(os.path.abspath(__file__)))  # 添加当前目录
+
 from src.model_visualization.model_info_parsers import ModelInfoParserRegistry, register_parsers
 from src.model_visualization.model_info_visualizers import ModelInfoVisualizerRegistry, register_visualizers
 from src.model_visualization.model_info_visualizers_impl import (
@@ -321,21 +323,13 @@ def main():
             if args.plot_type == "ranking":
                 print("🔍 增强版ranking模式: 显示详细准确率比较，包括测试/训练/验证准确率及差异分析")
             
-            # 根据参数设置图表类型和大小
-            figsize = (15, 8)
-            if args.plot_type == "ranking" and len(model_dirs) > 5:
-                # 为ranking模式自动调整图表大小以适应更多模型
-                figsize = (15, 1 + 0.8 * len(model_dirs))
-                print_verbose(args.verbose, f"自动调整ranking模式图表大小: {figsize}")
-            
             # 执行可视化
-            fig = comparison_visualizer.visualize(show=True, plot_type=args.plot_type, figsize=figsize)
+            result = comparison_visualizer.visualize(show=True, plot_type=args.plot_type)
             
-            if fig:
+            if result:
                 print_verbose(args.verbose, "模型比较可视化完成")
-                # 这里可以添加保存图表的功能，未来可以作为扩展
             else:
-                print("⚠️ 警告：未能生成有效的比较图表")
+                print("⚠️ 警告：未能生成有效的比较")
         except Exception as e:
             print(f"❌ 模型比较过程出错: {str(e)}")
             print_verbose(args.verbose, f"模型比较错误详情: {str(e)}")
@@ -378,13 +372,13 @@ def namespace_demo():
             print(f"   - 模型类型: {custom_namespace_info.model_type}")
         
         # 可视化不同命名空间的模型信息
-        print(f"\n📊 可视化不同命名空间的模型信息:")
+        print(f"\n� 可视化不同命名空间的模型信息:")
         if default_namespace_info:
             ModelInfoVisualizerRegistry.draw(default_namespace_info)
         if custom_namespace_info:
             ModelInfoVisualizerRegistry.draw(custom_namespace_info)
         
-        print("\n💡 提示: 在实际应用中，您可以使用命名空间来区分不同项目的模型，")
+        print("\n�💡 提示: 在实际应用中，您可以使用命名空间来区分不同项目的模型，")
         print("   即使模型文件名称或路径相似，也可以通过命名空间进行有效隔离。")
     else:
         print(f"⚠️  示例文件不存在: {demo_file_path}")
