@@ -1,4 +1,5 @@
 import json
+import os
 from typing import Dict, Any
 from src.model_show.data_models import ModelInfoData
 from src.utils.log_utils import get_logger
@@ -25,9 +26,18 @@ class ConfigFileVisualizer(BaseModelVisualizer):
         Returns:
             bool: 是否支持该模型信息
         """
-        # 支持namespace为"config"的ModelInfoData
-        # 以及从配置文件解析出来的模型信息
-        return model_info.namespace == "config" or "config" in model_info.path.lower()
+        # 严格匹配ConfigFileParser的支持规则
+        # 1. 首先检查模型信息的命名空间是否为"config"
+        # 2. 然后检查文件路径是否包含"config"且扩展名为.json
+        if model_info.namespace != "config":
+            return False
+        
+        # 验证路径格式是否符合config.json文件规则
+        if model_info.path:
+            ext = os.path.splitext(model_info.path)[1].lower()
+            return ext == ".json" and "config" in model_info.path.lower()
+        
+        return False
 
     def visualize(self, model_info: ModelInfoData, namespace: str = "default") -> Dict[str, Any]:
         """将配置文件信息可视化为结构化数据

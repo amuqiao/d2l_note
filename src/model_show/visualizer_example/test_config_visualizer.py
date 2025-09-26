@@ -99,11 +99,16 @@ class TestConfigVisualizer(unittest.TestCase):
         self.assertTrue(visualizer.support(self.model_info1, "config"))
         self.assertTrue(visualizer.support(self.model_info2, "config"))
         
-        # 修改命名空间，测试是否仍能支持
+        # 测试严格命名空间规则 - 当命名空间不是"config"时应该不支持
+        original_namespace = self.model_info1.namespace
         self.model_info1.namespace = "test"
-        self.assertTrue(visualizer.support(self.model_info1, "test"))  # 应该仍能支持，因为文件路径包含config
+        self.assertFalse(visualizer.support(self.model_info1, "test"))
         
-        print(f"\n可视化器支持函数测试通过")
+        # 恢复原来的命名空间
+        self.model_info1.namespace = original_namespace
+        self.assertTrue(visualizer.support(self.model_info1, "config"))
+        
+        print(f"\n可视化器支持函数测试通过 - 严格遵守命名空间和文件路径规则")
     
     def test_namespace_support(self):
         """测试命名空间支持"""
