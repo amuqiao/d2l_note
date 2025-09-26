@@ -6,7 +6,7 @@
 """
 import unittest
 import os
-from src.model_show.parsers.base_parsers import ModelInfoParserRegistry
+from src.model_show.parsers.base_model_parsers import ModelInfoParserRegistry
 from src.model_show.data_models import ModelInfoData
 
 

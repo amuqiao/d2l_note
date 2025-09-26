@@ -6,7 +6,7 @@ from datetime import datetime
 from src.model_show.data_models import ModelInfoData
 from src.model_show.data_access import DataAccessor
 from src.utils.log_utils import get_logger
-from .base_parsers import BaseModelInfoParser, ModelInfoParserRegistry
+from .base_model_parsers import BaseModelInfoParser, ModelInfoParserRegistry
 
 logger = get_logger(name=__name__)
 
@@ -19,8 +19,16 @@ class ConfigFileParser(BaseModelInfoParser):
         """初始化配置文件解析器"""
         pass
     
-    def support(self, file_path: str) -> bool:
-        """判断是否为支持的配置文件格式"""
+    def support(self, file_path: str, namespace: str = "default") -> bool:
+        """判断是否为支持的配置文件格式
+        
+        Args:
+            file_path: 文件路径
+            namespace: 命名空间，默认为"default"
+        
+        Returns:
+            bool: 是否支持该文件
+        """
         if not os.path.exists(file_path):
             return False
             
@@ -28,8 +36,16 @@ class ConfigFileParser(BaseModelInfoParser):
         ext = os.path.splitext(file_path)[1].lower()
         return ext == '.json' and 'config' in file_path.lower()
     
-    def parse(self, file_path: str) -> Optional[ModelInfoData]:
-        """解析配置文件为ModelInfoData对象"""
+    def parse(self, file_path: str, namespace: str = "default") -> Optional[ModelInfoData]:
+        """解析配置文件为ModelInfoData对象
+        
+        Args:
+            file_path: 文件路径
+            namespace: 命名空间，默认为"default"
+        
+        Returns:
+            ModelInfoData: 解析后的模型信息数据
+        """
         try:
             # 使用DataAccessor读取JSON文件
             config_data = DataAccessor.read_file(file_path)
@@ -69,4 +85,4 @@ class ConfigFileParser(BaseModelInfoParser):
 
 
 # 导入注册中心以支持装饰器
-from .base_parsers import ModelInfoParserRegistry
+from .base_model_parsers import ModelInfoParserRegistry

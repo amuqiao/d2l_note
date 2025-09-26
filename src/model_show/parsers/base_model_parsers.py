@@ -17,13 +17,29 @@ class BaseModelInfoParser(ABC):
     priority: int = 50
     
     @abstractmethod
-    def support(self, file_path: str) -> bool:
-        """判断当前解析器是否支持该文件"""
+    def support(self, file_path: str, namespace: str = "default") -> bool:
+        """判断当前解析器是否支持该文件
+        
+        Args:
+            file_path: 文件路径
+            namespace: 命名空间，默认为"default"
+        
+        Returns:
+            bool: 是否支持该文件
+        """
         pass
     
     @abstractmethod
-    def parse(self, file_path: str) -> Optional[ModelInfoData]:
-        """解析文件为标准化ModelInfoData"""
+    def parse(self, file_path: str, namespace: str = "default") -> Optional[ModelInfoData]:
+        """解析文件为标准化ModelInfoData
+        
+        Args:
+            file_path: 文件路径
+            namespace: 命名空间，默认为"default"
+        
+        Returns:
+            ModelInfoData: 解析后的模型信息数据
+        """
         pass
 
 
@@ -70,7 +86,7 @@ class ModelInfoParserRegistry:
         # 首先在指定命名空间中查找
         if namespace in cls._parsers:
             for parser in cls._parsers[namespace]:
-                if parser.support(file_path):
+                if parser.support(file_path, namespace):
                     return parser
         
         # 如果指定命名空间中未找到，尝试在默认命名空间中查找
@@ -94,7 +110,7 @@ class ModelInfoParserRegistry:
             return None
         
         try:
-            model_info = parser.parse(file_path)
+            model_info = parser.parse(file_path, namespace)
             if model_info:
                 model_info.namespace = namespace  # 设置命名空间
             return model_info

@@ -10,18 +10,22 @@ from typing import Optional
 # 1. 集中导入所有解析器模块（关键：导入即触发装饰器注册）
 # ------------------------------
 # 导入配置文件解析器（触发 ConfigFileParser 的装饰器注册）
-from .parsers.config_parser import ConfigFileParser
+
+from .parsers.model_config_parser import ConfigFileParser
+
+
 # 导入指标文件解析器（触发 MetricsFileParser 的装饰器注册）
-from .parsers.metrics_parser import MetricsFileParser
+from .parsers.model_metrics_parser import MetricsFileParser
+
+
 # 导入模型文件解析器（触发 ModelFileParser 的装饰器注册）
-from .parsers.model_parser import ModelFileParser
-# 如果有其他解析器，继续添加导入
-# from .parsers.log_parser import ModelLogParser
+from .parsers.model_file_parser import ModelFileParser
+
 
 # ------------------------------
 # 2. 对外暴露核心类，简化外部调用
 # ------------------------------
-from .parsers.base_parsers import (
+from .parsers.base_model_parsers import (
     BaseModelInfoParser,  # 解析器基类（供外部自定义解析器用）
     ModelInfoParserRegistry  # 注册中心（供外部调用解析逻辑用）
 )

@@ -1,7 +1,7 @@
 from typing import Optional
 import os
 import torch
-from .base_parsers import BaseModelInfoParser, ModelInfoParserRegistry
+from .base_model_parsers import BaseModelInfoParser, ModelInfoParserRegistry
 from src.model_show.data_models import ModelInfoData
 from src.utils.log_utils import get_logger
 
@@ -16,8 +16,16 @@ class ModelFileParser(BaseModelInfoParser):
     # 设置较高优先级，确保模型文件被正确解析
     priority: int = 80
     
-    def support(self, file_path: str) -> bool:
-        """判断是否为支持的模型文件格式"""
+    def support(self, file_path: str, namespace: str = "default") -> bool:
+        """判断是否为支持的模型文件格式
+        
+        Args:
+            file_path: 文件路径
+            namespace: 命名空间，默认为"default"
+        
+        Returns:
+            bool: 是否支持该文件
+        """
         if not os.path.exists(file_path):
             return False
             
@@ -25,8 +33,16 @@ class ModelFileParser(BaseModelInfoParser):
         ext = os.path.splitext(file_path)[1].lower()
         return ext in ['.pth', '.pt', '.bin', '.onnx']
     
-    def parse(self, file_path: str) -> Optional[ModelInfoData]:
-        """解析模型文件为ModelInfoData对象"""
+    def parse(self, file_path: str, namespace: str = "default") -> Optional[ModelInfoData]:
+        """解析模型文件为ModelInfoData对象
+        
+        Args:
+            file_path: 文件路径
+            namespace: 命名空间，默认为"default"
+        
+        Returns:
+            ModelInfoData: 解析后的模型信息数据
+        """
         try:
             # 提取文件名作为默认模型名
             model_name = os.path.splitext(os.path.basename(file_path))[0]

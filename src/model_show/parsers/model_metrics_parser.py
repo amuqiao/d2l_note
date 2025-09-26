@@ -2,7 +2,7 @@ from typing import Optional
 import os
 import json
 from datetime import datetime
-from .base_parsers import BaseModelInfoParser, ModelInfoParserRegistry
+from .base_model_parsers import BaseModelInfoParser, ModelInfoParserRegistry
 from src.model_show.data_models import ModelInfoData
 
 
@@ -13,8 +13,16 @@ class MetricsFileParser(BaseModelInfoParser):
     # 设置较高优先级
     priority: int = 70
     
-    def support(self, file_path: str) -> bool:
-        """判断是否为支持的指标文件格式"""
+    def support(self, file_path: str, namespace: str = "default") -> bool:
+        """判断是否为支持的指标文件格式
+        
+        Args:
+            file_path: 文件路径
+            namespace: 命名空间，默认为"default"
+        
+        Returns:
+            bool: 是否支持该文件
+        """
         if not os.path.exists(file_path):
             return False
             
@@ -22,8 +30,16 @@ class MetricsFileParser(BaseModelInfoParser):
         ext = os.path.splitext(file_path)[1].lower()
         return ext == '.json' and 'metrics' in os.path.basename(file_path).lower()
     
-    def parse(self, file_path: str) -> Optional[ModelInfoData]:
-        """解析指标文件为ModelInfoData对象"""
+    def parse(self, file_path: str, namespace: str = "default") -> Optional[ModelInfoData]:
+        """解析指标文件为ModelInfoData对象
+        
+        Args:
+            file_path: 文件路径
+            namespace: 命名空间，默认为"default"
+        
+        Returns:
+            ModelInfoData: 解析后的模型信息数据
+        """
         try:
             with open(file_path, 'r') as f:
                 metrics_data = json.load(f)
