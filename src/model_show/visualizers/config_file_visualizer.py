@@ -1,9 +1,12 @@
 import json
 import os
-from typing import Dict, Any
+import sys
+from typing import Dict, Any, List, Optional
+from datetime import datetime
+from prettytable import PrettyTable
 from src.model_show.data_models import ModelInfoData
 from src.utils.log_utils import get_logger
-from .base_model_visualizers import BaseModelVisualizer, ModelVisualizerRegistry
+from src.model_show.visualizers.base_model_visualizers import BaseModelVisualizer, ModelVisualizerRegistry
 
 logger = get_logger(name=__name__)
 
@@ -40,400 +43,298 @@ class ConfigFileVisualizer(BaseModelVisualizer):
         return False
 
     def visualize(self, model_info: ModelInfoData, namespace: str = "default") -> Dict[str, Any]:
-        """将配置文件信息可视化为结构化数据
+        """将模型配置信息可视化为表格格式
 
         Args:
             model_info: 模型信息数据
             namespace: 命名空间，默认为"default"
 
         Returns:
-            Dict[str, Any]: 可视化结果
+            Dict[str, Any]: 可视化结果，包含表格对象和显示文本
         """
         try:
-            # 构建可视化结果
-            visualization_result = {
-                "type": "config_visualization",
-                "model_name": model_info.name,
-                "model_path": model_info.path,
-                "model_type": model_info.model_type,
-                "framework": model_info.framework,
-                "task_type": model_info.task_type,
-                "timestamp": model_info.timestamp,
-                "version": model_info.version,
-                "namespace": model_info.namespace,
-                "config_overview": self._generate_config_overview(model_info.params),
-                "config_details": self._format_config_details(model_info.params),
-                "visualization_elements": self._create_visualization_elements(model_info.params)
-            }
-
-            return visualization_result
-
-        except Exception as e:
-            logger.error(f"可视化配置文件失败 {model_info.name}: {str(e)}")
-            return {
-                "type": "error",
-                "error_message": str(e),
-                "model_name": model_info.name
-            }
-
-    def _generate_config_overview(self, config_params: Dict[str, any]) -> Dict[str, any]:
-        """生成配置概览信息
-
-        Args:
-            config_params: 配置参数字典
-
-        Returns:
-            Dict[str, any]: 配置概览
-        """
-        overview = {
-            "parameter_count": len(config_params),
-            "has_model_config": "model_config" in config_params,
-            "has_training_config": "training_config" in config_params,
-            "has_optimizer_config": "optimizer" in config_params or "optimizer_config" in config_params,
-            "has_dataset_config": "dataset" in config_params or "dataset_config" in config_params
-        }
-
-        # 添加关键参数信息
-        key_params = []
-        for key, value in config_params.items():
-            if isinstance(value, (int, float, str)) and len(key_params) < 10:
-                key_params.append({"name": key, "value": value})
-        overview["key_parameters"] = key_params
-
-        return overview
-
-    def _format_config_details(self, config_params: Dict[str, any]) -> Dict[str, any]:
-        """格式化配置详情
-
-        Args:
-            config_params: 配置参数字典
-
-        Returns:
-            Dict[str, any]: 格式化后的配置详情
-        """
-        # 这里可以根据需要对配置参数进行格式化，使其更适合显示
-        # 为了简单起见，我们直接返回处理后的配置参数
-        formatted_config = {}
-        
-        for key, value in config_params.items():
-            # 将复杂对象转换为字符串，便于显示
-            if isinstance(value, (dict, list)):
-                try:
-                    formatted_config[key] = json.dumps(value, ensure_ascii=False, indent=2)
-                except Exception:
-                    formatted_config[key] = str(value)
-            else:
-                formatted_config[key] = value
+            # 创建主表格
+            table = PrettyTable()
+            table.title = f"模型配置信息 ({os.path.basename(model_info.path)})"
+            table.field_names = ["属性", "值"]
+            
+            # 添加基本信息
+            table.add_row(["模型名称", model_info.name])
+            table.add_row(["存储路径", model_info.path])
+            table.add_row(["模型类型", model_info.model_type])
+            table.add_row(["时间戳", self._format_timestamp(model_info.timestamp)])
+            table.add_row(["框架", model_info.framework])
+            table.add_row(["任务类型", model_info.task_type])
+            table.add_row(["版本", model_info.version])
+            table.add_row(["命名空间", model_info.namespace])
+            
+            # 添加分割线
+            table.add_row(["="*20, "="*40])
+            
+            # 添加详细配置参数
+            if model_info.params:
+                table.add_row(["详细配置", ""])  # 添加配置标题行
                 
-        return formatted_config
-
-    def _create_visualization_elements(self, config_params: Dict[str, any]) -> Dict[str, any]:
-        """创建可视化元素
-
-        Args:
-            config_params: 配置参数字典
-
-        Returns:
-            Dict[str, any]: 可视化元素定义
-        """
-        # 生成不同类型的可视化元素
-        elements = {
-            "config_tree": {
-                "type": "tree",
-                "data": self._build_config_tree(config_params)
-            },
-            "param_distribution": {
-                "type": "chart",
-                "chart_type": "pie",
-                "title": "配置参数类型分布",
-                "data": self._generate_param_distribution(config_params)
+                # 分类显示不同类型的参数
+                self._add_config_params_to_table(table, model_info.params)
+            else:
+                table.add_row(["⚙️  详细配置", "无配置参数"])
+            
+            # 美化表格
+            table.align["属性"] = "l"
+            table.align["值"] = "l"
+            
+            # 记录日志
+            logger.info(f"\n{table}")
+            
+            # 返回可视化结果
+            return {
+                "table": table,
+                "text": str(table),
+                "success": True,
+                "message": "配置文件可视化成功"
             }
-        }
-
-        return elements
-
-    def _build_config_tree(self, config_params: Dict[str, any]) -> Dict[str, any]:
-        """构建配置树状结构
-
-        Args:
-            config_params: 配置参数字典
-
-        Returns:
-            Dict[str, any]: 树状结构数据
-        """
-        tree = {"name": "config", "children": []}
-        
-        for key, value in config_params.items():
-            node = {"name": key}
-            if isinstance(value, dict):
-                node["children"] = self._dict_to_tree_children(value)
-            elif isinstance(value, list):
-                node["children"] = self._list_to_tree_children(value)
-            else:
-                node["value"] = str(value)
             
-            tree["children"].append(node)
+        except Exception as e:
+            logger.error(f"配置文件可视化失败: {str(e)}")
+            return {
+                "success": False,
+                "message": f"配置文件可视化失败: {str(e)}"
+            }
             
-        return tree
-
-    def _dict_to_tree_children(self, data: Dict[str, any]) -> list:
-        """将字典转换为树状子节点列表
-
-        Args:
-            data: 字典数据
-
-        Returns:
-            list: 子节点列表
-        """
-        children = []
-        for key, value in data.items():
-            child = {"name": key}
-            if isinstance(value, dict):
-                child["children"] = self._dict_to_tree_children(value)
-            elif isinstance(value, list):
-                child["children"] = self._list_to_tree_children(value)
-            else:
-                child["value"] = str(value)
-            children.append(child)
-        return children
-
-    def _list_to_tree_children(self, data: list) -> list:
-        """将列表转换为树状子节点列表
-
-        Args:
-            data: 列表数据
-
-        Returns:
-            list: 子节点列表
-        """
-        children = []
-        for i, item in enumerate(data):
-            child = {"name": f"[{i}]", "index": i}
-            if isinstance(item, dict):
-                child["children"] = self._dict_to_tree_children(item)
-            elif isinstance(item, list):
-                child["children"] = self._list_to_tree_children(item)
-            else:
-                child["value"] = str(item)
-            children.append(child)
-        return children
-
-    def _generate_param_distribution(self, config_params: Dict[str, any]) -> list:
-        """生成参数类型分布数据
-
-        Args:
-            config_params: 配置参数字典
-
-        Returns:
-            list: 分布数据列表
-        """
-        type_count = {}
-        
-        for value in config_params.values():
-            value_type = type(value).__name__
-            if value_type not in type_count:
-                type_count[value_type] = 0
-            type_count[value_type] += 1
-        
-        return [
-            {"name": key, "value": value} for key, value in type_count.items()
-        ]
-
-    def compare(self, model_infos: list[ModelInfoData], namespace: str = "default") -> Dict[str, Any]:
-        """比较多个配置文件信息
+    def compare(self, model_infos: List[ModelInfoData], namespace: str = "default") -> Dict[str, Any]:
+        """比较多个模型的配置信息
 
         Args:
             model_infos: 模型信息数据列表
             namespace: 命名空间，默认为"default"
 
         Returns:
-            Dict[str, Any]: 比较结果
+            Dict[str, Any]: 比较可视化结果
         """
         try:
-            # 验证输入
-            if not model_infos or len(model_infos) < 2:
-                raise ValueError("比较操作至少需要2个模型信息")
+            if len(model_infos) < 2:
+                return {
+                    "success": False,
+                    "message": "比较需要至少2个模型配置信息"
+                }
+                
+            # 创建比较表格
+            table = PrettyTable()
             
-            # 检查所有模型是否都支持
+            # 设置表头
+            headers = ["配置项"]
+            for i, model_info in enumerate(model_infos, 1):
+                headers.append(f"模型 {i}: {model_info.name}")
+            
+            table.field_names = headers
+            
+            # 收集所有唯一的配置项
+            all_params = set()
             for model_info in model_infos:
-                if not self.support(model_info, namespace):
-                    raise ValueError(f"不支持的模型信息: {model_info.name}")
+                all_params.update(model_info.params.keys())
             
-            # 收集基本信息
-            model_names = [model.name for model in model_infos]
-            model_paths = [model.path for model in model_infos]
+            # 添加基本信息比较
+            basic_info = [
+                ("模型名称", lambda info: info.name),
+                ("存储路径", lambda info: os.path.basename(info.path)),
+                ("模型类型", lambda info: info.model_type),
+                ("时间戳", lambda info: self._format_timestamp(info.timestamp)),
+                ("框架", lambda info: info.framework),
+                ("任务类型", lambda info: info.task_type),
+                ("版本", lambda info: info.version)
+            ]
             
-            # 比较配置参数
-            comparison_result = {
-                "type": "config_comparison",
-                "model_names": model_names,
-                "model_paths": model_paths,
-                "namespace": namespace,
-                "common_parameters": self._find_common_parameters(model_infos),
-                "unique_parameters": self._find_unique_parameters(model_infos),
-                "differing_parameters": self._find_differing_parameters(model_infos),
-                "config_overviews": [self._generate_config_overview(model.params) for model in model_infos],
-                "visualization_elements": self._create_comparison_visualizations(model_infos)
+            for label, getter in basic_info:
+                row = [label]
+                for model_info in model_infos:
+                    row.append(getter(model_info))
+                table.add_row(row)
+            
+            # 添加分割线
+            divider_row = ["="*20] + ["="*30 for _ in range(len(model_infos))]
+            table.add_row(divider_row)
+            
+            # 添加配置参数比较
+            if all_params:
+                for param in sorted(all_params):
+                    row = [f"{param}"]
+                    for model_info in model_infos:
+                        value = model_info.params.get(param, "- 无 -")
+                        # 格式化复杂值
+                        row.append(self._format_value(value))
+                    table.add_row(row)
+            
+            # 美化表格
+            for field in headers:
+                table.align[field] = "l"
+            
+            # 记录日志
+            print("\n" + "="*80)
+            print("模型配置比较分析")
+            print("="*80)
+            logger.info(f"\n{table}")
+            
+            # 返回比较结果
+            return {
+                "table": table,
+                "text": str(table),
+                "success": True,
+                "message": "模型配置比较成功"
             }
-            
-            return comparison_result
             
         except Exception as e:
-            logger.error(f"比较配置文件失败: {str(e)}")
+            logger.error(f"模型配置比较失败: {str(e)}")
             return {
-                "type": "error",
-                "error_message": str(e),
-                "model_names": [model.name for model in model_infos] if model_infos else []
+                "success": False,
+                "message": f"模型配置比较失败: {str(e)}"
             }
             
-    def _find_common_parameters(self, model_infos: list[ModelInfoData]) -> Dict[str, list]:
-        """查找所有模型共有的参数
-        
+    def _format_timestamp(self, timestamp: float) -> str:
+        """格式化时间戳为可读日期时间
+
         Args:
-            model_infos: 模型信息数据列表
-            
+            timestamp: 时间戳
+
         Returns:
-            Dict[str, list]: 共有参数及其在各模型中的值
+            str: 格式化后的日期时间字符串
         """
-        # 获取第一个模型的参数作为基准
-        if not model_infos or not model_infos[0].params:
-            return {}
+        try:
+            return datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+        except:
+            return str(timestamp)
             
-        common_params = {}
-        first_params = model_infos[0].params
-        
-        # 检查每个参数是否在所有模型中都存在
-        for param_name in first_params.keys():
-            is_common = True
-            param_values = [first_params[param_name]]
-            
-            for i in range(1, len(model_infos)):
-                if param_name not in model_infos[i].params:
-                    is_common = False
-                    break
-                param_values.append(model_infos[i].params[param_name])
-            
-            if is_common:
-                common_params[param_name] = param_values
-        
-        return common_params
-        
-    def _find_unique_parameters(self, model_infos: list[ModelInfoData]) -> list:
-        """查找每个模型独有的参数
-        
+    def _format_value(self, value: Any) -> str:
+        """格式化值为可读字符串
+
         Args:
-            model_infos: 模型信息数据列表
-            
+            value: 任意类型的值
+
         Returns:
-            list: 每个模型独有的参数列表
+            str: 格式化后的字符串
         """
-        unique_params_list = []
-        all_param_sets = []
+        if isinstance(value, (dict, list)):
+            # 对复杂数据类型进行格式化，避免表格过于冗长
+            if isinstance(value, dict):
+                if len(value) > 3:
+                    return f"字典({len(value)}个键值对)"
+                return json.dumps(value, ensure_ascii=False, indent=2)
+            else:
+                if len(value) > 5:
+                    return f"列表({len(value)}个元素)"
+                return json.dumps(value, ensure_ascii=False)
+        return str(value)
         
-        # 收集每个模型的参数集合
-        for model_info in model_infos:
-            param_set = set(model_info.params.keys()) if model_info.params else set()
-            all_param_sets.append(param_set)
-        
-        # 找出每个模型独有的参数
-        for i, model_info in enumerate(model_infos):
-            # 其他模型的参数集合的并集
-            other_params = set()
-            for j, param_set in enumerate(all_param_sets):
-                if j != i:
-                    other_params.update(param_set)
-            
-            # 当前模型独有的参数
-            unique_params = set(model_info.params.keys()) - other_params
-            unique_params_list.append({
-                "model_name": model_info.name,
-                "unique_parameters": list(unique_params)
-            })
-        
-        return unique_params_list
-        
-    def _find_differing_parameters(self, model_infos: list[ModelInfoData]) -> Dict[str, list]:
-        """查找在所有模型中存在但值不同的参数
-        
+    def _add_config_params_to_table(self, table: PrettyTable, params: Dict[str, Any]) -> None:
+        """将配置参数添加到表格中
+
         Args:
-            model_infos: 模型信息数据列表
-            
-        Returns:
-            Dict[str, list]: 不同值的参数及其在各模型中的值
+            table: PrettyTable对象
+            params: 配置参数字典
         """
-        differing_params = {}
-        common_params = self._find_common_parameters(model_infos)
+        # 分类处理不同类型的参数
+        model_params = {k: v for k, v in params.items() if k in ['model', 'architecture', 'network']}
+        training_params = {k: v for k, v in params.items() if k in ['batch_size', 'epochs', 'lr', 'optimizer', 'loss']}
+        data_params = {k: v for k, v in params.items() if k in ['dataset', 'data', 'input_size', 'output_size']}
+        other_params = {k: v for k, v in params.items() if k not in list(model_params) + list(training_params) + list(data_params)}
         
-        # 检查共有参数的值是否不同
-        for param_name, param_values in common_params.items():
-            # 检查所有值是否相同
-            all_same = True
-            first_value = param_values[0]
-            
-            for value in param_values[1:]:
-                # 简单比较，实际应用中可能需要更复杂的比较逻辑
-                if str(value) != str(first_value):
-                    all_same = False
-                    break
-            
-            if not all_same:
-                differing_params[param_name] = param_values
+        # 添加模型架构参数
+        if model_params:
+            table.add_row(["模型架构", ""])
+            for key, value in model_params.items():
+                table.add_row([f"  - {key}", self._format_value(value)])
         
-        return differing_params
+        # 添加训练参数
+        if training_params:
+            table.add_row(["训练参数", ""])
+            for key, value in training_params.items():
+                table.add_row([f"  - {key}", self._format_value(value)])
         
-    def _create_comparison_visualizations(self, model_infos: list[ModelInfoData]) -> Dict[str, Any]:
-        """创建比较可视化元素
+        # 添加数据参数
+        if data_params:
+            table.add_row(["数据参数", ""])
+            for key, value in data_params.items():
+                table.add_row([f"  - {key}", self._format_value(value)])
         
-        Args:
-            model_infos: 模型信息数据列表
-            
-        Returns:
-            Dict[str, Any]: 比较可视化元素
-        """
-        # 生成参数比较图表数据
-        param_comparison_data = []
-        for i, model_info in enumerate(model_infos):
-            param_types = {}
-            for value in model_info.params.values():
-                value_type = type(value).__name__
-                if value_type not in param_types:
-                    param_types[value_type] = 0
-                param_types[value_type] += 1
-            
-            for param_type, count in param_types.items():
-                param_comparison_data.append({
-                    "model_name": model_info.name,
-                    "param_type": param_type,
-                    "count": count
-                })
-            
-        # 生成参数数量比较
-        param_count_data = [
-            {"model_name": model.name, "param_count": len(model.params) if model.params else 0}
-            for model in model_infos
-        ]
-        
-        return {
-            "param_comparison_chart": {
-                "type": "chart",
-                "chart_type": "bar",
-                "title": "配置参数类型分布比较",
-                "data": param_comparison_data
-            },
-            "param_count_chart": {
-                "type": "chart",
-                "chart_type": "bar",
-                "title": "配置参数数量比较",
-                "data": param_count_data
-            },
-            "comparison_summary": {
-                "type": "table",
-                "title": "配置文件比较摘要",
-                "columns": ["比较项", "结果"],
-                "rows": [
-                    ["模型数量", str(len(model_infos))],
-                    ["共有参数数量", str(len(self._find_common_parameters(model_infos)))],
-                    ["不同值的参数数量", str(len(self._find_differing_parameters(model_infos)))]
-                ]
-            }
-        }
+        # 添加其他参数
+        if other_params:
+            table.add_row(["其他参数", ""])
+            for key, value in other_params.items():
+                table.add_row([f"  - {key}", self._format_value(value)])
+
+
+if __name__ == "__main__":
+    """用于单独验证visualize和compare方法的输出"""
+    # 创建模拟的ModelInfoData对象
+    def create_mock_model_info(config_path: str, name: str, params: Dict[str, Any]) -> ModelInfoData:
+        return ModelInfoData(
+            name=name,
+            path=config_path,
+            model_type="test_model",
+            timestamp=datetime.now().timestamp(),
+            framework="test_framework",
+            task_type="test_task",
+            version="1.0.0",
+            namespace="config",
+            params=params
+        )
+    
+    # 创建第一个模型配置
+    params1 = {
+        "model": {
+            "type": "CNN",
+            "layers": 5
+        },
+        "batch_size": 32,
+        "epochs": 100,
+        "lr": 0.001,
+        "optimizer": "Adam",
+        "dataset": "MNIST",
+        "input_size": [28, 28, 1]
+    }
+    model_info1 = create_mock_model_info(
+        config_path="/path/to/config1.json", 
+        name="model_v1", 
+        params=params1
+    )
+    
+    # 创建第二个模型配置
+    params2 = {
+        "model": {
+            "type": "CNN",
+            "layers": 10
+        },
+        "batch_size": 64,
+        "epochs": 200,
+        "lr": 0.0001,
+        "optimizer": "SGD",
+        "dataset": "MNIST",
+        "output_size": 10,
+        "dropout": 0.5
+    }
+    model_info2 = create_mock_model_info(
+        config_path="/path/to/config2.json", 
+        name="model_v2", 
+        params=params2
+    )
+    
+    # 初始化可视化器
+    visualizer = ConfigFileVisualizer()
+    
+    print("=" * 80)
+    print("测试可视化单个模型配置")
+    print("=" * 80)
+    result1 = visualizer.visualize(model_info1)
+    if result1["success"]:
+        print(result1["text"])
+    else:
+        print(f"错误: {result1['message']}")
+    
+    print("\n" + "=" * 80)
+    print("测试比较多个模型配置")
+    print("=" * 80)
+    compare_result = visualizer.compare([model_info1, model_info2])
+    if compare_result["success"]:
+        print(compare_result["text"])
+    else:
+        print(f"错误: {compare_result['message']}")
