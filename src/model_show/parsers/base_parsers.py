@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any, Type
 from abc import ABC, abstractmethod
 import os
 import re
-from src.model_visualization.data_models import ModelInfoData
+from src.model_show.data_models import ModelInfoData
 from src.utils.log_utils import get_logger
 
 
@@ -33,8 +33,16 @@ class ModelInfoParserRegistry:
     _parsers: Dict[str, List[BaseModelInfoParser]] = {"default": []}  # 按命名空间组织解析器
     
     @classmethod
-    def register(cls, parser_cls: Type[BaseModelInfoParser], namespace: str = "default"):
-        """注册解析器类（使用类而非实例，便于延迟初始化）"""
+    def register(cls, parser_cls=None, namespace: str = "default"):
+        """注册解析器类（支持直接调用和装饰器用法）"""
+        # 如果parser_cls为None，说明是作为带参数的装饰器使用
+        if parser_cls is None:
+            # 返回一个可以接受parser_cls的装饰器函数
+            def decorator(cls_to_register):
+                return cls.register(cls_to_register, namespace)
+            return decorator
+        
+        # 正常注册逻辑
         if namespace not in cls._parsers:
             cls._parsers[namespace] = []
         
@@ -45,7 +53,7 @@ class ModelInfoParserRegistry:
         # 按优先级排序
         cls._parsers[namespace].sort(key=lambda p: p.priority, reverse=True)
         
-        return parser_cls  # 支持装饰器用法
+        return parser_cls
     
     @classmethod
     def unregister(cls, parser_cls: Type[BaseModelInfoParser], namespace: str = "default"):

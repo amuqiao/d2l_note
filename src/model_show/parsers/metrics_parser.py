@@ -1,8 +1,9 @@
 from typing import Optional
 import os
 import json
+from datetime import datetime
 from .base_parsers import BaseModelInfoParser, ModelInfoParserRegistry
-from src.model_visualization.data_models import ModelInfoData
+from src.model_show.data_models import ModelInfoData
 
 
 @ModelInfoParserRegistry.register(namespace="metrics")
@@ -27,18 +28,34 @@ class MetricsFileParser(BaseModelInfoParser):
             with open(file_path, 'r') as f:
                 metrics_data = json.load(f)
             
-            # 提取模型指标信息
-            accuracy = metrics_data.get('accuracy', 0.0)
-            loss = metrics_data.get('loss', 0.0)
-            model_name = metrics_data.get('model_name', 'unknown')
+            # 从文件路径中提取模型名称
+            file_dir = os.path.dirname(file_path)
+            model_name = os.path.basename(file_dir) if file_dir else 'unknown_model'
+            
+            # 提取关键指标信息
+            metrics = {
+                'final_train_loss': metrics_data.get('final_train_loss', 0.0),
+                'final_train_acc': metrics_data.get('final_train_acc', 0.0),
+                'final_test_acc': metrics_data.get('final_test_acc', 0.0),
+                'best_test_acc': metrics_data.get('best_test_acc', 0.0),
+                'total_training_time': metrics_data.get('total_training_time', '0s'),
+                'samples_per_second': metrics_data.get('samples_per_second', '0')
+            }
+            
+            # 提取时间戳信息
+            timestamp = os.path.getmtime(file_path)
             
             # 创建并返回ModelInfoData对象
             return ModelInfoData(
-                file_path=file_path,
-                model_name=model_name,
-                accuracy=accuracy,
-                loss=loss,
-                # 其他字段根据实际情况填充
+                name=model_name,
+                path=file_path,
+                model_type="unknown",  # 从指标文件无法直接获取模型类型
+                timestamp=timestamp,
+                params={},
+                metrics=metrics,
+                framework="PyTorch",  # 假设为PyTorch模型
+                task_type="classification",  # 基于指标判断为分类任务
+                version="1.0"
             )
             
         except Exception as e:

@@ -1,42 +1,72 @@
 from typing import Optional
 import os
-import configparser
-from .base_parsers import BaseModelInfoParser
-from src.model_visualization.data_models import ModelInfoData
+import json
+from typing import Optional
+from datetime import datetime
+from src.model_show.data_models import ModelInfoData
+from src.model_show.data_access import DataAccessor
+from src.utils.log_utils import get_logger
+from .base_parsers import BaseModelInfoParser, ModelInfoParserRegistry
+
+logger = get_logger(name=__name__)
 
 
+@ModelInfoParserRegistry.register(namespace="config")
 class ConfigFileParser(BaseModelInfoParser):
     """配置文件解析器：解析模型的配置文件"""
+    
+    def __init__(self):
+        """初始化配置文件解析器"""
+        pass
     
     def support(self, file_path: str) -> bool:
         """判断是否为支持的配置文件格式"""
         if not os.path.exists(file_path):
             return False
             
-        # 支持.ini、.conf、.config等配置文件
+        # 支持.json格式的配置文件
         ext = os.path.splitext(file_path)[1].lower()
-        return ext in ['.ini', '.conf', '.config']
+        return ext == '.json' and 'config' in file_path.lower()
     
     def parse(self, file_path: str) -> Optional[ModelInfoData]:
         """解析配置文件为ModelInfoData对象"""
         try:
-            config = configparser.ConfigParser()
-            config.read(file_path)
+            # 使用DataAccessor读取JSON文件
+            config_data = DataAccessor.read_file(file_path)
+            if config_data is None:
+                raise ValueError(f"配置文件读取失败: {file_path}")
             
             # 提取模型基本信息
-            model_name = config.get('model', 'name', fallback='unknown')
-            model_version = config.get('model', 'version', fallback='unknown')
-            input_shape = config.get('model', 'input_shape', fallback='unknown')
+            model_name = config_data.get('model_name', 'unknown')
+            
+            # 从timestamp字段解析时间戳，如果没有则使用文件修改时间
+            timestamp_str = config_data.get('timestamp')
+            if timestamp_str:
+                try:
+                    timestamp = datetime.strptime(timestamp_str, '%Y-%m-%d %H:%M:%S').timestamp()
+                except ValueError:
+                    timestamp = DataAccessor.get_file_timestamp(file_path)
+            else:
+                timestamp = DataAccessor.get_file_timestamp(file_path)
             
             # 创建并返回ModelInfoData对象
             return ModelInfoData(
-                file_path=file_path,
-                model_name=model_name,
-                model_version=model_version,
-                input_shape=input_shape,
-                # 其他字段根据实际情况填充
+                name=model_name,
+                path=file_path,
+                model_type=model_name,  # 使用模型名称作为模型类型
+                timestamp=timestamp,
+                params=config_data,  # 整个配置数据作为参数
+                metrics={},
+                namespace="config",
+                framework="PyTorch",  # 默认PyTorch框架
+                task_type="classification",  # 默认分类任务
+                version="1.0"
             )
             
         except Exception as e:
-            # 具体日志记录由调用方处理
+            logger.error(f"解析配置文件失败 {file_path}: {str(e)}")
             raise ValueError(f"解析配置文件失败: {str(e)}")
+
+
+# 导入注册中心以支持装饰器
+from .base_parsers import ModelInfoParserRegistry
