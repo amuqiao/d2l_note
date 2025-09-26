@@ -84,9 +84,6 @@ class ConfigFileVisualizer(BaseModelVisualizer):
             table.align["属性"] = "l"
             table.align["值"] = "l"
             
-            # 记录日志
-            logger.info(f"\n{table}")
-            
             # 返回可视化结果
             return {
                 "table": table,
@@ -168,12 +165,6 @@ class ConfigFileVisualizer(BaseModelVisualizer):
             # 美化表格
             for field in headers:
                 table.align[field] = "l"
-            
-            # 记录日志
-            print("\n" + "="*80)
-            print("模型配置比较分析")
-            print("="*80)
-            logger.info(f"\n{table}")
             
             # 返回比较结果
             return {
