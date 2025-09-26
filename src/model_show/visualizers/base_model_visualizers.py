@@ -40,6 +40,19 @@ class BaseModelVisualizer(ABC):
             Dict[str, Any]: 可视化结果
         """
         pass
+    
+    @abstractmethod
+    def compare(self, model_infos: List[ModelInfoData], namespace: str = "default") -> Dict[str, Any]:
+        """比较多个模型信息并可视化为指定格式
+        
+        Args:
+            model_infos: 模型信息数据列表
+            namespace: 命名空间，默认为"default"
+        
+        Returns:
+            Dict[str, Any]: 比较可视化结果
+        """
+        pass
 
 
 class ModelVisualizerRegistry:
@@ -120,4 +133,23 @@ class ModelVisualizerRegistry:
             return visualizer.visualize(model_info, namespace)
         except Exception as e:
             logger.error(f"可视化模型失败 {model_info.name}: {str(e)}")
+            return None
+            
+    @classmethod
+    def compare_models(cls, model_infos: List[ModelInfoData], namespace: str = "default") -> Optional[Dict[str, Any]]:
+        """自动比较多个模型的入口方法"""
+        if not model_infos or len(model_infos) < 2:
+            logger.warning(f"模型比较需要至少2个模型信息")
+            return None
+            
+        # 使用第一个模型信息来匹配可视化器
+        visualizer = cls.get_matched_visualizer(model_infos[0], namespace)
+        if not visualizer:
+            logger.warning(f"未找到匹配的模型可视化器")
+            return None
+        
+        try:
+            return visualizer.compare(model_infos, namespace)
+        except Exception as e:
+            logger.error(f"比较模型失败: {str(e)}")
             return None

@@ -46,6 +46,26 @@ def visualize_model_info(
         namespace=namespace
     )
 
+def compare_model_infos(
+    model_infos: list[ModelInfoData],
+    namespace: str = "default"
+) -> Optional[Dict[str, Any]]:
+    """
+    便捷比较函数：直接调用注册中心比较多个模型的逻辑
+    
+    Args:
+        model_infos: 模型信息数据列表
+        namespace: 可视化器命名空间
+        
+    Returns:
+        比较结果字典，比较失败则返回None
+    """
+    # 复用注册中心的compare_models方法
+    return ModelVisualizerRegistry.compare_models(
+        model_infos=model_infos,
+        namespace=namespace
+    )
+
 def get_all_registered_visualizers(namespace: str = None) -> list[BaseModelVisualizer]:
     """
     获取所有已注册的可视化器
