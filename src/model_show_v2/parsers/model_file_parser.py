@@ -2,7 +2,7 @@ from typing import Optional
 import os
 import torch
 from .base_model_parsers import BaseModelInfoParser, ModelInfoParserRegistry
-from src.model_show_v2.data_models import ModelInfoData
+from src.model_show_v2.data_models import ModelInfoData, MetricData
 from src.utils.log_utils import get_logger
 
 # 初始化日志器
@@ -94,19 +94,51 @@ class ModelFileParser(BaseModelInfoParser):
             # 获取文件时间戳
             timestamp = os.path.getmtime(file_path)
             
-            # 创建并返回ModelInfoData对象
-            return ModelInfoData(
+            # 创建模型参数
+            params = {
+                "parameters": model_params,
+                "input_shape": input_shape,
+                "model_size": round(model_size, 2),
+                "file_extension": ext
+            }
+            
+            # 创建并返回ModelInfoData对象（适配新的数据结构）
+            model_info = ModelInfoData(
                 name=model_name,
                 path=file_path,
                 model_type=model_type,
                 timestamp=timestamp,
-                params={
-                    "parameters": model_params,
-                    "input_shape": input_shape,
-                    "model_size": round(model_size, 2),
-                    "file_extension": ext
-                }
+                params=params,
+                framework=model_type,  # 框架类型与模型类型相同
+                task_type="unknown",  # 默认任务类型为未知
+                version="1.0"  # 默认版本号
+                # 不再需要显式添加namespace参数
             )
+            
+            # 如果能获取到模型参数，添加一个参数数量的指标
+            if model_params is not None:
+                params_metric = MetricData(
+                    name="Parameters",
+                    metric_type="scalar",
+                    data={"value": model_params, "unit": ""},
+                    source_path=file_path,
+                    timestamp=timestamp,
+                    description="模型参数总量"
+                )
+                model_info.add_metric(params_metric)
+            
+            # 添加模型大小指标
+            size_metric = MetricData(
+                name="Model Size",
+                metric_type="scalar",
+                data={"value": round(model_size, 2), "unit": "MB"},
+                source_path=file_path,
+                timestamp=timestamp,
+                description="模型文件大小"
+            )
+            model_info.add_metric(size_metric)
+            
+            return model_info
             
         except Exception as e:
             logger.error(f"解析模型文件 {file_path} 失败: {str(e)}")
