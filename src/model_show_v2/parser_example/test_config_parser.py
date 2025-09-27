@@ -2,7 +2,7 @@
 配置文件解析器测试用例
 
 功能：测试ConfigFileParser解析config.json文件的能力，验证其能否正确提取模型配置参数、学习率、批量大小等信息，并比较多个配置文件的差异。
-使用示例：python -m unittest src.model_show.parser_example.test_config_parser
+使用示例：python -m unittest src.model_show_v2.parser_example.test_config_parser
 """
 import unittest
 import os
@@ -17,7 +17,7 @@ class TestConfigParser(unittest.TestCase):
         """设置测试环境，准备测试文件路径"""
         # 测试的配置文件路径
         self.config_file1 = "e:/github_project/d2l_note/runs/run_20250914_040635/config.json"
-        self.config_file2 = "e:/github_project/d2l_note/runs/run_20250914_044631/config.json"
+        self.config_file2 = "e:/github_project/d2l_note/runs/run_20250927_235759/config.json"
         
         # 验证测试文件是否存在
         for file_path in [self.config_file1, self.config_file2]:
@@ -54,17 +54,17 @@ class TestConfigParser(unittest.TestCase):
         
         # 验证解析结果
         self.assertIsInstance(model_info2, ModelInfoData)
-        self.assertEqual(model_info2.name, "ResNet")
+        self.assertEqual(model_info2.name, "LeNet")
         self.assertEqual(model_info2.path, self.config_file2)
-        self.assertEqual(model_info2.model_type, "ResNet")
+        self.assertEqual(model_info2.model_type, "LeNet")
         
         # 验证参数是否正确解析
         self.assertIn("model_name", model_info2.params)
-        self.assertEqual(model_info2.params["model_name"], "ResNet")
+        self.assertEqual(model_info2.params["model_name"], "LeNet")
         self.assertIn("num_epochs", model_info2.params)
-        self.assertEqual(model_info2.params["num_epochs"], 10)
+        self.assertEqual(model_info2.params["num_epochs"], 30)
         self.assertIn("learning_rate", model_info2.params)
-        self.assertEqual(model_info2.params["learning_rate"], 0.05)
+        self.assertEqual(model_info2.params["learning_rate"], 0.8)
         
         print(f"\n配置文件1解析结果:")
         print(f"模型名称: {model_info1.name}")
@@ -99,7 +99,11 @@ class TestConfigParser(unittest.TestCase):
         )
         
         # 比较两个配置的差异
-        self.assertNotEqual(model_info1.name, model_info2.name)
+        self.assertEqual(model_info1.name, model_info2.name)
+        self.assertEqual(model_info1.model_type, model_info2.model_type)
+        self.assertNotEqual(model_info1.path, model_info2.path)
+        self.assertNotEqual(model_info1.timestamp, model_info2.timestamp)
+        self.assertNotEqual(model_info1.params["num_epochs"], model_info2.params["num_epochs"])
         
         # 比较学习率差异
         lr1 = model_info1.params.get("learning_rate", 0)
