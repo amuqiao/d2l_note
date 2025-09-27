@@ -1,0 +1,10 @@
+{
+    "model_name": "LeNet",
+    "device": "cuda:0",
+    "timestamp": "2025-09-27 23:57:59",
+    "num_epochs": 30,
+    "learning_rate": 0.8,
+    "batch_size": 256,
+    "train_samples": 60160,
+    "test_samples": 10240
+}
