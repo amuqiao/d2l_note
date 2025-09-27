@@ -2,7 +2,7 @@ from typing import List, Optional, Dict, Any, Type
 from abc import ABC, abstractmethod
 import os
 import re
-from src.model_show.data_models import ModelInfoData
+from src.model_show_v2.data_models import ModelInfoData
 from src.utils.log_utils import get_logger
 
 

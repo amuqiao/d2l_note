@@ -8,10 +8,10 @@ import os
 import sys
 
 # 添加项目根目录到Python路径
-sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))))
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
 
-from src.model_show.parser_registry import parse_model_info
-from src.model_show.visualizers.config_file_visualizer import ConfigFileVisualizer
+from src.model_show_v2.parsers.base_model_parsers import ModelInfoParserRegistry
+from src.model_show_v2.visualizers.config_file_visualizer import ConfigFileVisualizer
 
 
 def main():
@@ -39,8 +39,8 @@ def main():
     try:
         # 解析配置文件
         print("\n正在解析配置文件...")
-        model_info1 = parse_model_info(config_file1, namespace="config")
-        model_info2 = parse_model_info(config_file2, namespace="config")
+        model_info1 = ModelInfoParserRegistry.parse_file(config_file1, namespace="config")
+        model_info2 = ModelInfoParserRegistry.parse_file(config_file2, namespace="config")
         
         if not model_info1 or not model_info2:
             print("错误: 配置文件解析失败")

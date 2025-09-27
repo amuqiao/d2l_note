@@ -6,10 +6,10 @@
 """
 import unittest
 import os
-from src.model_show.parser_registry import parse_model_info
-from src.model_show.visualizer_registry import visualize_model_info
-from src.model_show.visualizers.base_model_visualizers import ModelVisualizerRegistry
-from src.model_show.data_models import ModelInfoData
+from src.model_show_v2.parser_registry import parse_model_info
+from src.model_show_v2.visualizer_registry import visualize_model_info
+from src.model_show_v2.visualizers.base_model_visualizers import ModelVisualizerRegistry
+from src.model_show_v2.data_models import ModelInfoData
 from typing import Dict, Any
 
 

@@ -3,8 +3,8 @@ import os
 import json
 from typing import Optional
 from datetime import datetime
-from src.model_show.data_models import ModelInfoData
-from src.model_show.data_access import DataAccessor
+from src.model_show_v2.data_models import ModelInfoData
+from src.model_show_v2.data_access import DataAccessor
 from src.utils.log_utils import get_logger
 from .base_model_parsers import BaseModelInfoParser, ModelInfoParserRegistry
 
@@ -69,18 +69,18 @@ class ConfigFileParser(BaseModelInfoParser):
             else:
                 timestamp = DataAccessor.get_file_timestamp(file_path)
 
-            # 创建并返回ModelInfoData对象
+            # 创建并返回ModelInfoData对象（适配新的数据结构）
             return ModelInfoData(
                 name=model_name,
                 path=file_path,
-                model_type=model_name,  # 使用模型名称作为模型类型
+                model_type=config_data.get("model_type", model_name),  # 优先使用配置中的模型类型
                 timestamp=timestamp,
                 params=config_data,  # 整个配置数据作为参数
-                metrics={},
-                namespace="config",
-                framework="PyTorch",  # 默认PyTorch框架
-                task_type="classification",  # 默认分类任务
-                version="1.0",
+                framework=config_data.get("framework", "PyTorch"),  # 从配置中获取框架
+                task_type=config_data.get("task_type", "classification"),  # 从配置中获取任务类型
+                version=config_data.get("version", "1.0"),  # 从配置中获取版本
+                # 移除了metrics参数，因为新的数据结构使用metric_list
+                # 移除了namespace参数，因为新的数据结构中没有该字段
             )
 
         except Exception as e:

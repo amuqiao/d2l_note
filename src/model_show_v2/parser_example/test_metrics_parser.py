@@ -9,8 +9,8 @@ import unittest
 from datetime import datetime
 
 # 导入解析器和数据模型
-from src.model_show.parser_registry import parse_model_info
-from src.model_show.data_models import ModelInfoData
+from src.model_show_v2.parser_registry import parse_model_info
+from src.model_show_v2.data_models import ModelInfoData
 
 
 class TestMetricsParser(unittest.TestCase):

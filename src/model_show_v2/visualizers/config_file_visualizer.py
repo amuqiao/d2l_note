@@ -4,9 +4,9 @@ import sys
 from typing import Dict, Any, List, Optional
 from datetime import datetime
 from prettytable import PrettyTable
-from src.model_show.data_models import ModelInfoData
+from src.model_show_v2.data_models import ModelInfoData
 from src.utils.log_utils import get_logger
-from src.model_show.visualizers.base_model_visualizers import BaseModelVisualizer, ModelVisualizerRegistry
+from .base_model_visualizers import BaseModelVisualizer, ModelVisualizerRegistry
 
 logger = get_logger(name=__name__)
 
@@ -29,12 +29,6 @@ class ConfigFileVisualizer(BaseModelVisualizer):
         Returns:
             bool: 是否支持该模型信息
         """
-        # 严格匹配ConfigFileParser的支持规则
-        # 1. 首先检查模型信息的命名空间是否为"config"
-        # 2. 然后检查文件路径是否包含"config"且扩展名为.json
-        if model_info.namespace != "config":
-            return False
-        
         # 验证路径格式是否符合config.json文件规则
         if model_info.path:
             ext = os.path.splitext(model_info.path)[1].lower()
@@ -66,7 +60,6 @@ class ConfigFileVisualizer(BaseModelVisualizer):
             table.add_row(["框架", model_info.framework])
             table.add_row(["任务类型", model_info.task_type])
             table.add_row(["版本", model_info.version])
-            table.add_row(["命名空间", model_info.namespace])
             
             # 添加分割线
             table.add_row(["="*20, "="*40])
@@ -266,7 +259,6 @@ if __name__ == "__main__":
             framework="test_framework",
             task_type="test_task",
             version="1.0.0",
-            namespace="config",
             params=params
         )
     

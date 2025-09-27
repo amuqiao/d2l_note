@@ -1,4 +1,4 @@
-from src.model_show.parser_registry import parse_model_info
+from src.model_show_v2.parser_registry import parse_model_info
 import os
 
 

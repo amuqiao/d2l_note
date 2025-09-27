@@ -3,7 +3,7 @@ import os
 import json
 from datetime import datetime
 from .base_model_parsers import BaseModelInfoParser, ModelInfoParserRegistry
-from src.model_show.data_models import ModelInfoData
+from src.model_show_v2.data_models import ModelInfoData
 
 
 @ModelInfoParserRegistry.register(namespace="metrics")

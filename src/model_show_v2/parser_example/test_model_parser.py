@@ -6,8 +6,8 @@
 """
 import unittest
 import os
-from src.model_show.parsers.base_model_parsers import ModelInfoParserRegistry
-from src.model_show.data_models import ModelInfoData
+from src.model_show_v2.parsers.base_model_parsers import ModelInfoParserRegistry
+from src.model_show_v2.data_models import ModelInfoData
 
 
 class TestModelParser(unittest.TestCase):

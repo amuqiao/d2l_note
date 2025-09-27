@@ -6,8 +6,8 @@
 """
 import unittest
 import os
-from src.model_show.parsers.base_model_parsers import ModelInfoParserRegistry
-from src.model_show.data_models import ModelInfoData
+from src.model_show_v2.parsers.base_model_parsers import ModelInfoParserRegistry
+from src.model_show_v2.data_models import ModelInfoData
 
 
 class TestConfigParser(unittest.TestCase):
@@ -37,7 +37,6 @@ class TestConfigParser(unittest.TestCase):
         self.assertEqual(model_info1.name, "LeNet")
         self.assertEqual(model_info1.path, self.config_file1)
         self.assertEqual(model_info1.model_type, "LeNet")
-        self.assertEqual(model_info1.namespace, "config")
         
         # 验证参数是否正确解析
         self.assertIn("model_name", model_info1.params)
@@ -71,15 +70,21 @@ class TestConfigParser(unittest.TestCase):
         print(f"模型名称: {model_info1.name}")
         print(f"模型类型: {model_info1.model_type}")
         print(f"参数字典: {model_info1.params}")
-        print(f"命名空间: {model_info1.namespace}")
+        print(f"框架: {model_info1.framework}")
+        print(f"任务类型: {model_info1.task_type}")
+        print(f"版本: {model_info1.version}")
         print(f"时间戳: {model_info1.timestamp}")
+        print(f"指标数量: {len(model_info1.metric_list)}")
         
         print(f"\n配置文件2解析结果:")
         print(f"模型名称: {model_info2.name}")
         print(f"模型类型: {model_info2.model_type}")
         print(f"参数字典: {model_info2.params}")
-        print(f"命名空间: {model_info2.namespace}")
+        print(f"框架: {model_info2.framework}")
+        print(f"任务类型: {model_info2.task_type}")
+        print(f"版本: {model_info2.version}")
         print(f"时间戳: {model_info2.timestamp}")
+        print(f"指标数量: {len(model_info2.metric_list)}")
     
     def test_multiple_config_files_comparison(self):
         """测试多个配置文件的解析和比较"""
