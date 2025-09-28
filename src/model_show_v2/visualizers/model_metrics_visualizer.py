@@ -68,29 +68,10 @@ class MetricsVisualizer(BaseModelVisualizer):
                 "tables": {}
             }
             
-            # 添加基本模型信息表格
-            basic_table = self._create_basic_info_table(model_info)
-            result["tables"]["basic_info"] = basic_table
-            result["text"] = str(basic_table)
-            
-            # 添加标量指标表格
-            if model_info.get_metrics_by_type("scalar"):
-                scalar_table = self._create_scalar_metrics_table(model_info)
-                result["tables"]["scalar_metrics"] = scalar_table
-                result["text"] += "\n\n" + str(scalar_table)
-            
-            # 添加曲线指标摘要表格
-            if model_info.get_metrics_by_type("curve"):
-                curve_table = self._create_curve_metrics_summary_table(model_info)
-                result["tables"]["curve_metrics_summary"] = curve_table
-                result["text"] += "\n\n" + str(curve_table)
-            
-            # 添加训练信息表格
-            if model_info.params:
-                training_table = self._create_training_info_table(model_info)
-                if training_table:
-                    result["tables"]["training_info"] = training_table
-                    result["text"] += "\n\n" + str(training_table)
+            # 添加优化的指标表格（用户要求的格式）
+            optimized_table = self._create_optimized_metrics_table([model_info])
+            result["tables"]["optimized_metrics"] = optimized_table
+            result["text"] = str(optimized_table)
             
             return result
             
@@ -125,22 +106,10 @@ class MetricsVisualizer(BaseModelVisualizer):
                 "tables": {}
             }
             
-            # 创建模型基本信息比较表格
-            basic_compare_table = self._create_basic_info_compare_table(model_infos)
-            result["tables"]["basic_compare"] = basic_compare_table
-            result["text"] = str(basic_compare_table)
-            
-            # 创建标量指标比较表格
-            scalar_compare_table = self._create_scalar_metrics_compare_table(model_infos)
-            if scalar_compare_table:
-                result["tables"]["scalar_compare"] = scalar_compare_table
-                result["text"] += "\n\n" + str(scalar_compare_table)
-            
-            # 创建曲线指标关键值比较表格
-            curve_key_compare_table = self._create_curve_key_values_compare_table(model_infos)
-            if curve_key_compare_table:
-                result["tables"]["curve_key_compare"] = curve_key_compare_table
-                result["text"] += "\n\n" + str(curve_key_compare_table)
+            # 创建优化的多模型比较表格
+            optimized_compare_table = self._create_optimized_metrics_table(model_infos)
+            result["tables"]["optimized_compare"] = optimized_compare_table
+            result["text"] = str(optimized_compare_table)
             
             return result
             
@@ -151,282 +120,101 @@ class MetricsVisualizer(BaseModelVisualizer):
                 "message": f"模型指标比较失败: {str(e)}"
             }
     
-    def _create_basic_info_table(self, model_info: ModelInfoData) -> PrettyTable:
-        """创建模型基本信息表格"""
+    def _create_optimized_metrics_table(self, model_infos: List[ModelInfoData]) -> PrettyTable:
+        """创建优化的模型指标表格，按照用户要求的格式显示特定字段"""
         table = PrettyTable()
-        table.title = f"模型指标概览 ({model_info.name})"
-        table.field_names = ["属性", "值"]
         
-        # 添加基本信息
-        table.add_row(["模型名称", model_info.name])
-        table.add_row(["模型类型", model_info.model_type])
-        table.add_row(["框架", model_info.framework])
-        table.add_row(["任务类型", model_info.task_type])
-        table.add_row(["时间戳", self._format_timestamp(model_info.timestamp)])
-        table.add_row(["指标数量", len(model_info.metric_list)])
-        table.add_row(["标量指标", len(model_info.get_metrics_by_type("scalar"))])
-        table.add_row(["曲线指标", len(model_info.get_metrics_by_type("curve"))])
-        
-        # 美化表格
-        table.align["属性"] = "l"
-        table.align["值"] = "l"
-        
-        return table
-    
-    def _create_scalar_metrics_table(self, model_info: ModelInfoData) -> PrettyTable:
-        """创建标量指标表格"""
-        table = PrettyTable()
-        table.title = "标量指标详情"
-        table.field_names = ["指标名称", "值", "单位", "描述"]
-        
-        # 获取并排序标量指标
-        scalar_metrics = sorted(model_info.get_metrics_by_type("scalar"), key=lambda m: m.name)
-        
-        # 添加标量指标数据
-        for metric in scalar_metrics:
-            value = metric.data.get("value", "-")
-            unit = metric.data.get("unit", "")
-            # 格式化数值，保留合适的小数位数
-            if isinstance(value, float):
-                value = self._format_float_value(value)
-            
-            table.add_row([metric.name, value, unit, metric.description])
-        
-        # 美化表格
-        table.align["指标名称"] = "l"
-        table.align["值"] = "r"
-        table.align["单位"] = "c"
-        table.align["描述"] = "l"
-        
-        return table
-    
-    def _create_curve_metrics_summary_table(self, model_info: ModelInfoData) -> PrettyTable:
-        """创建曲线指标摘要表格"""
-        table = PrettyTable()
-        table.title = "曲线指标摘要"
-        table.field_names = ["指标名称", "数据点数量", "最大值", "最小值", "平均值", "单位"]
-        
-        # 获取并排序曲线指标
-        curve_metrics = sorted(model_info.get_metrics_by_type("curve"), key=lambda m: m.name)
-        
-        # 添加曲线指标摘要数据
-        for metric in curve_metrics:
-            values = metric.data.get("values", [])
-            # 过滤掉None值
-            valid_values = [v for v in values if v is not None]
-            count = len(valid_values)
-            
-            if count > 0:
-                max_val = max(valid_values)
-                min_val = min(valid_values)
-                avg_val = sum(valid_values) / count
-                
-                # 格式化数值
-                max_val = self._format_float_value(max_val)
-                min_val = self._format_float_value(min_val)
-                avg_val = self._format_float_value(avg_val)
-            else:
-                max_val = min_val = avg_val = "-"
-            
-            unit = metric.data.get("unit", "")
-            
-            table.add_row([metric.name, count, max_val, min_val, avg_val, unit])
-        
-        # 美化表格
-        for field in table.field_names:
-            if field in ["最大值", "最小值", "平均值"]:
-                table.align[field] = "r"
-            else:
-                table.align[field] = "l"
-        
-        return table
-    
-    def _create_training_info_table(self, model_info: ModelInfoData) -> Optional[PrettyTable]:
-        """创建训练信息表格"""
-        # 检查是否有训练相关信息
-        training_keys = ["total_training_time", "samples_per_second", 
-                        "training_start_time", "training_end_time"]
-        
-        has_training_info = any(key in model_info.params for key in training_keys)
-        if not has_training_info:
-            return None
-        
-        table = PrettyTable()
-        table.title = "训练信息"
-        table.field_names = ["属性", "值"]
-        
-        # 添加训练时间
-        if "total_training_time" in model_info.params:
-            table.add_row(["总训练时间", model_info.params["total_training_time"]])
-        
-        # 添加每秒处理样本数
-        if "samples_per_second" in model_info.params:
-            table.add_row(["每秒处理样本数", model_info.params["samples_per_second"]])
-        
-        # 添加训练开始和结束时间
-        if "training_start_time" in model_info.params:
-            table.add_row(["训练开始时间", model_info.params["training_start_time"]])
-        if "training_end_time" in model_info.params:
-            table.add_row(["训练结束时间", model_info.params["training_end_time"]])
-        
-        # 美化表格
-        table.align["属性"] = "l"
-        table.align["值"] = "l"
-        
-        return table
-    
-    def _create_basic_info_compare_table(self, model_infos: List[ModelInfoData]) -> PrettyTable:
-        """创建模型基本信息比较表格"""
-        table = PrettyTable()
+        # 设置表格标题
+        if len(model_infos) == 1:
+            table.title = f"模型指标详情 ({model_infos[0].name})"
+        else:
+            table.title = "模型指标比较"
         
         # 设置表头
-        headers = ["属性"]
-        for i, model_info in enumerate(model_infos, 1):
-            headers.append(f"模型 {i}: {model_info.name}")
+        headers = ["模型名称", "final_train_loss", "final_train_acc", "final_test_acc", 
+                  "best_test_acc", "total_training_time", "samples_per_second", 
+                  "epoch轮次", "training_start_time", "training_end_time"]
         
         table.field_names = headers
-        table.title = "模型基本信息比较"
         
-        # 添加基本信息比较
-        basic_info = [
-            ("模型名称", lambda info: info.name),
-            ("模型类型", lambda info: info.model_type),
-            ("框架", lambda info: info.framework),
-            ("任务类型", lambda info: info.task_type),
-            ("时间戳", lambda info: self._format_timestamp(info.timestamp)),
-            ("指标数量", lambda info: len(info.metric_list)),
-            ("标量指标", lambda info: len(info.get_metrics_by_type("scalar"))),
-            ("曲线指标", lambda info: len(info.get_metrics_by_type("curve")))
-        ]
-        
-        for label, getter in basic_info:
-            row = [label]
-            for model_info in model_infos:
-                row.append(getter(model_info))
-            table.add_row(row)
-        
-        # 美化表格
-        for field in headers:
-            table.align[field] = "l"
-        
-        return table
-    
-    def _create_scalar_metrics_compare_table(self, model_infos: List[ModelInfoData]) -> Optional[PrettyTable]:
-        """创建标量指标比较表格"""
-        # 收集所有唯一的标量指标名称
-        all_scalar_metrics = set()
+        # 为每个模型添加一行数据
         for model_info in model_infos:
-            scalar_metrics = model_info.get_metrics_by_type("scalar")
-            all_scalar_metrics.update([m.name for m in scalar_metrics])
-        
-        if not all_scalar_metrics:
-            return None
-        
-        table = PrettyTable()
-        
-        # 设置表头
-        headers = ["指标名称"]
-        for i, model_info in enumerate(model_infos, 1):
-            headers.append(f"模型 {i}: {model_info.name}")
-        
-        table.field_names = headers
-        table.title = "标量指标比较"
-        
-        # 添加标量指标比较数据
-        for metric_name in sorted(all_scalar_metrics):
-            row = [metric_name]
+            row = [model_info.name]  # 模型名称
             
-            # 获取每个模型的指标值
-            for model_info in model_infos:
-                metric = model_info.get_metric_by_name(metric_name)
-                if metric:
-                    value = metric.data.get("value", "-")
-                    unit = metric.data.get("unit", "")
-                    
-                    # 格式化数值
-                    if isinstance(value, float):
-                        value = self._format_float_value(value)
-                    
-                    row.append(f"{value}{unit}")
-                else:
-                    row.append("- 无 -")
+            # final_train_loss
+            train_loss_metric = model_info.get_metric_by_name("final_train_loss")
+            if train_loss_metric and "value" in train_loss_metric.data:
+                row.append(self._format_float_value(train_loss_metric.data["value"]))
+            else:
+                row.append("-")
+            
+            # final_train_acc
+            train_acc_metric = model_info.get_metric_by_name("final_train_acc")
+            if train_acc_metric and "value" in train_acc_metric.data:
+                row.append(self._format_float_value(train_acc_metric.data["value"]))
+            else:
+                row.append("-")
+            
+            # final_test_acc
+            test_acc_metric = model_info.get_metric_by_name("final_test_acc")
+            if test_acc_metric and "value" in test_acc_metric.data:
+                row.append(self._format_float_value(test_acc_metric.data["value"]))
+            else:
+                row.append("-")
+            
+            # best_test_acc
+            best_test_acc_metric = model_info.get_metric_by_name("best_test_acc")
+            if best_test_acc_metric and "value" in best_test_acc_metric.data:
+                row.append(self._format_float_value(best_test_acc_metric.data["value"]))
+            else:
+                row.append("-")
+            
+            # total_training_time
+            total_training_time = model_info.params.get("total_training_time", "-")
+            row.append(total_training_time)
+            
+            # samples_per_second
+            samples_per_second = model_info.params.get("samples_per_second", "-")
+            row.append(samples_per_second)
+            
+            # epoch轮次
+            epoch_count = self._get_epoch_count(model_info)
+            row.append(epoch_count)
+            
+            # training_start_time
+            training_start_time = model_info.params.get("training_start_time", "-")
+            row.append(training_start_time)
+            
+            # training_end_time
+            training_end_time = model_info.params.get("training_end_time", "-")
+            row.append(training_end_time)
             
             table.add_row(row)
         
         # 美化表格
-        for field in headers:
-            if field != "指标名称":
-                table.align[field] = "r"
-            else:
-                table.align[field] = "l"
+        table.align["模型名称"] = "l"
+        for field in headers[1:]:
+            table.align[field] = "r"
         
         return table
     
-    def _create_curve_key_values_compare_table(self, model_infos: List[ModelInfoData]) -> Optional[PrettyTable]:
-        """创建曲线指标关键值比较表格"""
-        # 收集所有唯一的曲线指标名称
-        all_curve_metrics = set()
-        for model_info in model_infos:
-            curve_metrics = model_info.get_metrics_by_type("curve")
-            all_curve_metrics.update([m.name for m in curve_metrics])
+    def _get_epoch_count(self, model_info: ModelInfoData) -> int:
+        """获取模型训练的epoch轮次"""
+        # 尝试从epoch_metrics相关的指标中获取轮次信息
+        for metric in model_info.metric_list:
+            # 检查是否有epochs字段
+            if "epochs" in metric.data:
+                return len(metric.data["epochs"])
+            # 检查是否有values字段（曲线数据长度可能代表epoch数量）
+            elif "values" in metric.data:
+                return len(metric.data["values"])
         
-        if not all_curve_metrics:
-            return None
+        # 如果没有找到，尝试从params中获取
+        if "epochs" in model_info.params:
+            return model_info.params["epochs"]
         
-        table = PrettyTable()
-        
-        # 设置表头
-        headers = ["指标名称", "统计值"]
-        for i, model_info in enumerate(model_infos, 1):
-            headers.append(f"模型 {i}: {model_info.name}")
-        
-        table.field_names = headers
-        table.title = "曲线指标关键值比较"
-        
-        # 添加曲线指标关键值比较数据
-        for metric_name in sorted(all_curve_metrics):
-            for stat_type in ["最大值", "最小值", "平均值"]:
-                row = [metric_name, stat_type]
-                
-                for model_info in model_infos:
-                    metric = model_info.get_metric_by_name(metric_name)
-                    if metric:
-                        values = metric.data.get("values", [])
-                        valid_values = [v for v in values if v is not None]
-                        
-                        if valid_values:
-                            if stat_type == "最大值":
-                                value = max(valid_values)
-                            elif stat_type == "最小值":
-                                value = min(valid_values)
-                            else:  # 平均值
-                                value = sum(valid_values) / len(valid_values)
-                            
-                            # 格式化数值
-                            if isinstance(value, float):
-                                value = self._format_float_value(value)
-                            
-                            unit = metric.data.get("unit", "")
-                            row.append(f"{value}{unit}")
-                        else:
-                            row.append("- 无 -")
-                    else:
-                        row.append("- 无 -")
-                
-                table.add_row(row)
-            
-            # 在每个指标后添加空行作为分隔
-            if metric_name != list(sorted(all_curve_metrics))[-1]:
-                table.add_row(["", ""] + ["" for _ in model_infos])
-        
-        # 美化表格
-        for field in headers:
-            if field not in ["指标名称", "统计值"]:
-                table.align[field] = "r"
-            else:
-                table.align[field] = "l"
-        
-        return table
+        # 默认返回-1表示未找到
+        return -1
     
     def _format_timestamp(self, timestamp: float) -> str:
         """格式化时间戳为可读日期时间"""

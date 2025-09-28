@@ -17,6 +17,63 @@ from src.utils.log_utils import get_logger
 logger = get_logger()
 logger.set_global_level(logging.ERROR)
 
+def show_visualization_effect():
+    """展示模型指标可视化效果"""
+    print("\n=== 模型指标可视化效果展示 ===")
+    print("此脚本可以直接运行查看可视化效果，也可以作为单元测试运行")
+    print("\npytest和unittest的主要区别：")
+    print("1. pytest是第三方测试框架，提供更丰富的功能和更简洁的语法")
+    print("2. unittest是Python标准库自带的测试框架")
+    print("3. pytest可以运行unittest风格的测试，但反之不行")
+    print("4. pytest提供自动发现测试、更丰富的断言、参数化测试等高级功能")
+    print("\n" + "="*50 + "\n")
+    
+    # 初始化解析器和可视化器
+    parser = MetricsFileParser()
+    visualizer = MetricsVisualizer()
+    
+    # 测试数据路径 - 使用现有的测试数据文件
+    test_data_dir1 = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+        "test_runs", "run_20250914_040635"
+    )
+    
+    test_data_dir2 = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+        "test_runs", "run_20250927_235759"
+    )
+    
+    # 获取指标文件路径
+    metrics_file_path1 = os.path.join(test_data_dir1, "metrics.json")
+    metrics_file_path2 = os.path.join(test_data_dir2, "metrics.json")
+    
+    # 检查文件是否存在
+    if not os.path.exists(metrics_file_path1):
+        print(f"警告：文件不存在: {metrics_file_path1}")
+        return
+    
+    if not os.path.exists(metrics_file_path2):
+        print(f"警告：文件不存在: {metrics_file_path2}")
+        return
+    
+    # 解析指标文件，获取模型信息
+    model_info1 = parser.parse(metrics_file_path1)
+    model_info2 = parser.parse(metrics_file_path2)
+    
+    # 执行单个模型可视化
+    print("\n【单个模型指标可视化 - 模型1】")
+    result = visualizer.visualize(model_info1)
+    if result["success"]:
+        print(result["text"])
+    
+    # 执行多个模型比较
+    print("\n【多模型指标比较】")
+    compare_result = visualizer.compare([model_info1, model_info2])
+    if compare_result["success"]:
+        print(compare_result["text"])
+    
+    print("\n=== 可视化展示完成 ===")
+
 
 class TestModelMetricsVisualizer(unittest.TestCase):
     """测试模型指标可视化器"""
@@ -27,102 +84,33 @@ class TestModelMetricsVisualizer(unittest.TestCase):
         self.parser = MetricsFileParser()
         self.visualizer = MetricsVisualizer()
         
-        # 测试数据路径
-        self.test_data_dir = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-            "runs", "run_20250914_040635"
+        # 测试数据路径 - 使用现有的测试数据文件
+        self.test_data_dir1 = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+            "test_runs", "run_20250914_040635"
         )
         
-        # 确保测试数据文件存在
-        self.metrics_file_path = os.path.join(self.test_data_dir, "metrics.json")
+        self.test_data_dir2 = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))),
+            "test_runs", "run_20250927_235759"
+        )
         
-        # 如果测试数据不存在，创建一个简单的模拟数据文件
-        if not os.path.exists(self.metrics_file_path):
-            self._create_mock_metrics_file()
+        # 获取指标文件路径
+        self.metrics_file_path1 = os.path.join(self.test_data_dir1, "metrics.json")
+        self.metrics_file_path2 = os.path.join(self.test_data_dir2, "metrics.json")
+        
+        # 检查文件是否存在
+        if not os.path.exists(self.metrics_file_path1):
+            self.fail(f"测试文件不存在: {self.metrics_file_path1}")
+        
+        if not os.path.exists(self.metrics_file_path2):
+            self.fail(f"测试文件不存在: {self.metrics_file_path2}")
         
         # 解析指标文件，获取模型信息
-        self.model_info = self.parser.parse(self.metrics_file_path)
+        self.model_info = self.parser.parse(self.metrics_file_path1)
         
-        # 为比较测试创建一个简单的副本模型信息
-        self.comparison_model_info = self._create_comparison_model_info()
-    
-    def tearDown(self):
-        """清理测试环境，删除生成的测试数据文件和所有创建的目录"""
-        # 删除生成的模拟指标文件（如果存在）
-        if hasattr(self, 'metrics_file_path') and os.path.exists(self.metrics_file_path):
-            try:
-                os.remove(self.metrics_file_path)
-                print(f"已删除生成的测试文件: {self.metrics_file_path}")
-            except Exception as e:
-                print(f"删除测试文件时出错: {str(e)}")
-        
-        # 删除测试子目录（如果该目录为空）
-        if hasattr(self, 'test_data_dir') and os.path.exists(self.test_data_dir):
-            try:
-                # 检查目录是否为空
-                if not os.listdir(self.test_data_dir):
-                    os.rmdir(self.test_data_dir)
-                    print(f"已删除空测试子目录: {self.test_data_dir}")
-                    
-                    # 检查并删除父runs目录（如果为空）
-                    runs_dir = os.path.dirname(self.test_data_dir)
-                    if os.path.exists(runs_dir) and not os.listdir(runs_dir):
-                        os.rmdir(runs_dir)
-                        print(f"已删除空runs目录: {runs_dir}")
-            except Exception as e:
-                print(f"删除测试目录时出错: {str(e)}")
-    
-    def _create_mock_metrics_file(self):
-        """创建模拟的指标数据文件用于测试"""
-        # 确保目录存在
-        os.makedirs(self.test_data_dir, exist_ok=True)
-        
-        # 创建简单的指标数据
-        mock_metrics_data = {
-            "final_train_loss": 0.2345,
-            "final_train_acc": 0.8976,
-            "final_test_loss": 0.3456,
-            "final_test_acc": 0.8567,
-            "best_test_acc": 0.8765,
-            "total_training_time": "00:15:23",
-            "samples_per_second": 1234.56,
-            "training_start_time": "2025-09-14 04:06:35",
-            "training_end_time": "2025-09-14 04:21:58",
-            "epoch_metrics": [
-                {"epoch": 1, "train_loss": 0.7654, "train_acc": 0.6789, "test_acc": 0.6543},
-                {"epoch": 2, "train_loss": 0.5432, "train_acc": 0.7654, "test_acc": 0.7123},
-                {"epoch": 3, "train_loss": 0.3456, "train_acc": 0.8234, "test_acc": 0.7789},
-                {"epoch": 4, "train_loss": 0.2678, "train_acc": 0.8654, "test_acc": 0.8123},
-                {"epoch": 5, "train_loss": 0.2345, "train_acc": 0.8976, "test_acc": 0.8567}
-            ]
-        }
-        
-        # 写入文件
-        import json
-        with open(self.metrics_file_path, 'w', encoding='utf-8') as f:
-            json.dump(mock_metrics_data, f, indent=2, ensure_ascii=False)
-    
-    def _create_comparison_model_info(self) -> ModelInfoData:
-        """创建用于比较测试的模型信息"""
-        # 解析原始指标文件
-        comparison_model_info = self.parser.parse(self.metrics_file_path)
-        
-        # 修改一些指标值，用于比较测试
-        comparison_model_info.name = "LeNet-Comparison"
-        
-        # 修改一些标量指标
-        final_test_acc = comparison_model_info.get_metric_by_name("final_test_acc")
-        if final_test_acc:
-            final_test_acc.data["value"] = 0.8812
-        
-        best_test_acc = comparison_model_info.get_metric_by_name("best_test_acc")
-        if best_test_acc:
-            best_test_acc.data["value"] = 0.8945
-        
-        # 修改训练时间
-        comparison_model_info.params["total_training_time"] = "00:12:45"
-        
-        return comparison_model_info
+        # 为比较测试使用第二个模型数据
+        self.comparison_model_info = self.parser.parse(self.metrics_file_path2)
     
     def test_visualize(self):
         """测试可视化功能"""
@@ -136,9 +124,7 @@ class TestModelMetricsVisualizer(unittest.TestCase):
         
         # 验证生成的表格类型
         tables = result["tables"]
-        self.assertIn("basic_info", tables, "缺少基本信息表格")
-        self.assertIn("scalar_metrics", tables, "缺少标量指标表格")
-        self.assertIn("curve_metrics_summary", tables, "缺少曲线指标摘要表格")
+        self.assertIn("optimized_metrics", tables, "缺少优化的指标表格")
         
         # 验证表格内容是否包含关键信息
         text = result["text"]
@@ -147,6 +133,17 @@ class TestModelMetricsVisualizer(unittest.TestCase):
         # 检查是否包含测试准确率相关信息（可能有不同的文本表示）
         test_acc_related = any(keyword in text.lower() for keyword in ["test", "准确率"])
         self.assertTrue(test_acc_related, "可视化文本中未包含测试准确率相关信息")
+        
+        # 验证表格内容是否包含关键信息
+        optimized_table = tables["optimized_metrics"]
+        # 验证表格中包含模型名称
+        self.assertIn(self.model_info.name, str(optimized_table), "表格应包含模型名称")
+        # 验证表格中包含关键指标字段
+        table_str = str(optimized_table).lower()
+        self.assertIn("final_train_loss", table_str, "表格应包含最终训练损失")
+        self.assertIn("final_test_acc", table_str, "表格应包含最终测试准确率")
+        self.assertIn("best_test_acc", table_str, "表格应包含最佳测试准确率")
+        self.assertIn("total_training_time", table_str, "表格应包含总训练时间")
         
         print("\n=== 可视化测试结果 ===")
         print(result["text"])
@@ -189,8 +186,7 @@ class TestModelMetricsVisualizer(unittest.TestCase):
         
         # 验证生成的表格类型
         tables = result["tables"]
-        self.assertIn("basic_compare", tables, "缺少基本信息比较表格")
-        self.assertIn("scalar_compare", tables, "缺少标量指标比较表格")
+        self.assertIn("optimized_compare", tables, "缺少优化的比较表格")
         
         # 验证表格内容是否包含关键信息
         text = result["text"]
@@ -200,6 +196,18 @@ class TestModelMetricsVisualizer(unittest.TestCase):
         # 检查是否包含测试准确率相关信息（可能有不同的文本表示）
         test_acc_related = any(keyword in text.lower() for keyword in ["test", "准确率"])
         self.assertTrue(test_acc_related, "比较文本中未包含测试准确率相关信息")
+        
+        # 验证表格内容是否包含关键信息
+        compare_table = tables["optimized_compare"]
+        # 验证表格中包含两个模型的名称
+        self.assertIn(self.model_info.name, str(compare_table), "表格应包含第一个模型名称")
+        self.assertIn(self.comparison_model_info.name, str(compare_table), "表格应包含第二个模型名称")
+        # 验证表格中包含关键指标字段
+        table_str = str(compare_table).lower()
+        self.assertIn("final_train_loss", table_str, "表格应包含最终训练损失")
+        self.assertIn("final_test_acc", table_str, "表格应包含最终测试准确率")
+        self.assertIn("best_test_acc", table_str, "表格应包含最佳测试准确率")
+        self.assertIn("total_training_time", table_str, "表格应包含总训练时间")
         
         print("\n=== 比较测试结果 ===")
         print(result["text"])
@@ -234,4 +242,6 @@ class TestModelMetricsVisualizer(unittest.TestCase):
 
 
 if __name__ == "__main__":
-    unittest.main()
+    # 如果直接运行脚本，展示可视化效果
+    show_visualization_effect()
+    # 如果需要运行pytest测试，可以使用命令行：pytest -v test_model_metrics_visualizer_pytest.py
