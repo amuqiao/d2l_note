@@ -8,7 +8,7 @@ from typing import Dict, Any, List, Optional
 from datetime import datetime
 from prettytable import PrettyTable
 from src.model_show_v2.data_models import ModelInfoData, MetricData
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 from .base_model_visualizers import BaseModelVisualizer, ModelVisualizerRegistry
 
 logger = get_logger(name=__name__)

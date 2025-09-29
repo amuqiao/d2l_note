@@ -5,7 +5,7 @@ from typing import Optional
 from datetime import datetime
 from src.model_show_v2.data_models import ModelInfoData
 from src.model_show_v2.data_access import DataAccessor
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 from .base_model_parsers import BaseModelInfoParser, ModelInfoParserRegistry
 
 logger = get_logger(name=__name__)

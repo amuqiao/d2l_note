@@ -11,7 +11,7 @@ from functools import lru_cache  # 用于路径查找缓存
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..')))
 
 # 导入自定义日志模块
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 # 导入自定义字体工具
 from src.helper_utils.matplotlib_tools import setup_matplotlib_font

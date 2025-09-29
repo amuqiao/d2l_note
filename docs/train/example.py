@@ -17,7 +17,7 @@ import sys
 import argparse
 from src.trainer.trainer import Trainer
 from src.utils.model_registry import ModelRegistry
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 
 def test_basic_training():

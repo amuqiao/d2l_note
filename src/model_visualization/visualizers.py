@@ -7,7 +7,7 @@ from abc import ABC, abstractmethod
 from prettytable import PrettyTable
 from src.model_visualization.data_models import MetricData
 from src.helper_utils.helper_tools_registry import ToolRegistry
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 
 # 初始化日志器（可视化器专属日志，可选）

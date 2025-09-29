@@ -3,7 +3,7 @@ import json
 from typing import Optional
 
 # 导入自定义日志模块
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 # 导入基础数据结构和接口
 from src.model_helper_utils.metric_parsers import MetricData, BaseMetricParser

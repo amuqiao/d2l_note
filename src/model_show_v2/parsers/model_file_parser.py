@@ -3,7 +3,7 @@ import os
 import torch
 from .base_model_parsers import BaseModelInfoParser, ModelInfoParserRegistry
 from src.model_show_v2.data_models import ModelInfoData, MetricData
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 # 初始化日志器
 logger = get_logger(name=__name__, log_file="logs/model_parser.log", global_level="INFO")

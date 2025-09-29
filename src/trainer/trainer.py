@@ -12,7 +12,7 @@ from src.utils.file_utils import FileUtils
 from src.utils.model_registry import ModelRegistry
 from src.utils.data_utils import DataLoader
 from src.predictor.predictor import Predictor
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 # 初始化日志
 logger = get_logger(

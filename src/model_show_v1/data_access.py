@@ -4,7 +4,7 @@ import torch
 from typing import Optional, Any
 
 # 导入自定义日志模块
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 # 初始化日志器
 logger = get_logger(name=__name__, log_file="logs/data_access.log", global_level="INFO")

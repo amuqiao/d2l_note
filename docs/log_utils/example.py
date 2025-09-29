@@ -22,7 +22,7 @@ import time
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..')))
 
 # 现在可以正确导入log_utils模块了
-from src.utils.log_utils import get_logger, logger as default_logger
+from src.utils.log_utils.log_utils import get_logger, logger as default_logger
 
 
 def basic_logging_example():

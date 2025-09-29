@@ -2,7 +2,7 @@ from abc import ABC, abstractmethod
 from typing import List, Optional
 from src.model_visualization.data_models import MetricData
 from src.model_visualization.data_access import DataAccessor
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 
 # 初始化日志器（解析器专属日志，可选）

@@ -89,7 +89,7 @@ def initialize_parsers():
     for ns, parsers in ModelInfoParserRegistry._parsers.items():
         parser_info.append(f"命名空间 '{ns}' 包含 {len(parsers)} 个解析器: {[p.__class__.__name__ for p in parsers]}")
     
-    from src.utils.log_utils import get_logger
+    from src.utils.log_utils.log_utils import get_logger
     logger = get_logger(name="parser_registry")
     logger.info(f"解析器系统初始化完成，共注册 {len(all_parsers)} 个解析器")
     for info in parser_info:

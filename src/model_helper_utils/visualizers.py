@@ -7,7 +7,7 @@ from typing import Any, Optional, List, Type
 
 
 # 导入自定义日志模块
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 # 导入工具注册中心
 from src.helper_utils.helper_tools_registry import ToolRegistry

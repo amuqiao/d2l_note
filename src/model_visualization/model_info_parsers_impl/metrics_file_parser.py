@@ -3,7 +3,7 @@ import os
 from abc import ABC, abstractmethod
 from src.model_visualization.data_models import ModelInfoData
 from src.model_visualization.data_access import DataAccessor
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 from src.model_visualization.model_info_parsers import BaseModelInfoParser
 from .config_file_parser import ConfigFileParser
 

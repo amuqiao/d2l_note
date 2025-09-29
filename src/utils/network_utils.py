@@ -2,7 +2,7 @@
 import torch
 from torch import nn
 
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 # 初始化日志器
 logger = get_logger(name=__name__, log_file="logs/network_utils.log", global_level="INFO")

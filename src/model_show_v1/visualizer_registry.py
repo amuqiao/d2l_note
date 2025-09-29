@@ -89,7 +89,7 @@ def get_all_registered_visualizers(namespace: str = None) -> list[BaseModelVisua
 # ------------------------------
 def initialize_visualizers():
     """初始化可视化器系统，确保所有可视化器都已注册"""
-    from src.utils.log_utils import get_logger
+    from src.utils.log_utils.log_utils import get_logger
     logger = get_logger(name="visualizer_registry")
     
     # 获取所有已注册的可视化器，验证注册是否成功
@@ -103,7 +103,7 @@ def initialize_visualizers():
     for ns, visualizers in ModelVisualizerRegistry._visualizers.items():
         visualizer_info.append(f"命名空间 '{ns}' 包含 {len(visualizers)} 个可视化器: {[v.__class__.__name__ for v in visualizers]}")
     
-    from src.utils.log_utils import get_logger
+    from src.utils.log_utils.log_utils import get_logger
     logger = get_logger(name="visualizer_registry")
     logger.info(f"可视化器系统初始化完成，共注册 {len(all_visualizers)} 个可视化器")
     for info in visualizer_info:

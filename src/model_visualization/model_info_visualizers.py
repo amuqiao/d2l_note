@@ -8,7 +8,7 @@ import time
 from prettytable import PrettyTable
 from src.model_visualization.data_models import ModelInfoData
 from src.helper_utils.helper_tools_registry import ToolRegistry
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 
 # 初始化日志器

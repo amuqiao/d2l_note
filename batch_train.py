@@ -9,7 +9,7 @@ import os
 from typing import List, Dict, Any, Optional
 
 # 导入日志工具
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 # 初始化日志，设置日志文件路径
 logger = get_logger(

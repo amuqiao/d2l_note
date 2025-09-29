@@ -3,7 +3,7 @@ from abc import ABC, abstractmethod
 import os
 import re
 from src.model_show_v2.data_models import ModelInfoData
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 
 # 初始化日志器

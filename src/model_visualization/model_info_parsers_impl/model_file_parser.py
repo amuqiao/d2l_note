@@ -4,7 +4,7 @@ import torch
 from abc import ABC, abstractmethod
 from src.model_visualization.data_models import ModelInfoData
 from src.model_visualization.data_access import DataAccessor
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 from .config_file_parser import ConfigFileParser
 from .metrics_file_parser import MetricsFileParser
 

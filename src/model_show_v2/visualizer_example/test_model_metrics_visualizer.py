@@ -11,7 +11,7 @@ from typing import Dict, Any, List
 from src.model_show_v2.parsers.model_metrics_parser import MetricsFileParser
 from src.model_show_v2.visualizers.model_metrics_visualizer import MetricsVisualizer
 from src.model_show_v2.data_models import ModelInfoData
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 # 设置日志级别为ERROR，减少测试输出
 logger = get_logger()

@@ -8,7 +8,7 @@ import os
 os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 
 # 导入日志工具
-from src.utils.log_utils import init_logger, info, error
+from src.utils.log_utils.log_utils import init_logger, info, error
 
 
 # ========================= 主函数入口 =========================

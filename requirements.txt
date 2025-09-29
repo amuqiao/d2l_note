@@ -1,1 +1,2 @@
 prettytable==3.16.0
+pymysql==1.1.2

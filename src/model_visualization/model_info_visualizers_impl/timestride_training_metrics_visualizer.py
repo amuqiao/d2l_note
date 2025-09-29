@@ -2,7 +2,7 @@ import os
 from abc import ABC, abstractmethod
 from src.model_visualization.data_models import ModelInfoData
 from src.model_visualization.data_access import DataAccessor
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 # 导入基类以避免循环导入问题
 from src.model_visualization.model_info_visualizers import BaseModelInfoVisualizer

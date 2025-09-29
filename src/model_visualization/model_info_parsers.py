@@ -5,7 +5,7 @@ import re
 import torch
 from src.model_visualization.data_models import ModelInfoData
 from src.model_visualization.data_access import DataAccessor
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 
 # 初始化日志器

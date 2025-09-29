@@ -7,7 +7,7 @@ import json
 from typing import List, Optional, Dict, Any
 from src.model_visualization.data_models import ModelInfoData, MetricData
 from src.helper_utils.helper_tools_registry import ToolRegistry
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 from prettytable import PrettyTable
 
 # 导入基类

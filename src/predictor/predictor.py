@@ -18,7 +18,7 @@ from src.utils.file_utils import FileUtils
 from src.utils.visualization import VisualizationTool
 from src.utils.data_utils import DataLoader
 
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 
 # 初始化日志，设置日志文件路径

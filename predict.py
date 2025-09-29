@@ -9,7 +9,7 @@ os.environ["KMP_DUPLICATE_LIB_OK"] = "TRUE"
 # 导入增强版预测器
 from src.predictor.predictor import Predictor
 
-from src.utils.log_utils import get_logger
+from src.utils.log_utils.log_utils import get_logger
 
 
 # 初始化日志，设置日志文件路径
