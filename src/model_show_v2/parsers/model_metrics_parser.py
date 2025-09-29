@@ -139,19 +139,19 @@ class MetricsFileParser(BaseModelInfoParser):
             ('best_test_acc', 'Best Test Accuracy', 0.0, '%')
         ]
         
-        for key, name, default, unit in scalar_metrics:
+        for key, display_name, default, unit in scalar_metrics:
             value = metrics_data.get(key, default)
             # 如果是准确率，转换为百分比
             if unit == '%' and isinstance(value, (int, float)):
                 value = value * 100
             
             metric_data = MetricData(
-                name=name,
+                name=key,  # 使用key作为指标名称，确保与可视化器中的查找一致
                 metric_type="scalar",
-                data={"value": value, "unit": unit},
+                data={"value": value, "unit": unit, "display_name": display_name},
                 source_path=file_path,
                 timestamp=timestamp,
-                description=f"{name} of the model"
+                description=f"{display_name} of the model"
             )
             model_info.add_metric(metric_data)
     
