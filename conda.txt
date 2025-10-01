@@ -1,0 +1,3 @@
+# 视频处理
+conda install -c conda-forge opencv
+conda install -c conda-forge imbalanced-learn -y 
