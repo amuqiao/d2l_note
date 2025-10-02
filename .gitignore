@@ -1,5 +1,5 @@
 # 忽略数据目录
-data/
+/data/
 /runs/
 /runs2/
 /timestride/
