@@ -25,7 +25,7 @@ from src.models.lenet import LeNet, LeNetBatchNorm
 
 # 从 src/models/lenet.py 导入 LeNet 和 LeNetBatchNorm 模型
 # 并使用 model_center 的 ModelRegistry 重新注册它们
-@ModelRegistry.register_model(model_name="LeNet", namespace="lenet", config={
+@ModelRegistry.register_model(model_name="LeNet", namespace="lenet", type="cnn", config={
     "num_classes": 10,
     "lr": 0.8,  # LeNet 适合稍高学习率
     "batch_size": 256
@@ -35,7 +35,7 @@ class RegisteredLeNet(LeNet):
     pass
 
 
-@ModelRegistry.register_model(model_name="LeNetBatchNorm", namespace="lenet", config={
+@ModelRegistry.register_model(model_name="LeNetBatchNorm", namespace="lenet", type="cnn", config={
     "num_classes": 10,
     "lr": 1.0,  # 带 BatchNorm 的 LeNet 学习率
     "batch_size": 256
@@ -83,6 +83,7 @@ ConfigRegistry.register_template("lenet_default", {
     "model": {
         "name": "LeNet",
         "namespace": "lenet",
+        "type": "cnn",
         "args": {}
     },
     "data": {
@@ -140,6 +141,7 @@ ConfigRegistry.register_template("lenet_batchnorm", {
     "model": {
         "name": "LeNetBatchNorm",
         "namespace": "lenet",
+        "type": "cnn",
         "args": {}
     },
     "data": {

@@ -84,12 +84,14 @@ class BaseTrainer:
         model_name = model_config['name']
         model_args = model_config.get('args', {})
         model_namespace = model_config.get('namespace', 'default')
+        model_type = model_config.get('type', 'default')
         
         try:
             # 使用模型注册中心创建模型实例
             self.model = ModelRegistry.create_model(
                 model_name=model_name,
                 namespace=model_namespace,
+                type=model_type,
                 **model_args
             )
             logger.info(f"已成功构建模型: {model_name}")
@@ -478,8 +480,8 @@ class ModelTrainerRegistry:
     _trainers: Dict[str, Dict[str, Type[BaseTrainer]]] = {"default": {}}
     
     @classmethod
-    def register(cls, trainer_class: Type[BaseTrainer], namespace: str = "default", name: Optional[str] = None) -> Type[BaseTrainer]:
-        """注册训练器类
+    def register(cls, trainer_class=None, namespace: str = "default", name: Optional[str] = None) -> Type[BaseTrainer] or Callable:
+        """注册训练器类（支持直接调用和装饰器用法）
         
         Args:
             trainer_class: 训练器类
@@ -487,8 +489,15 @@ class ModelTrainerRegistry:
             name: 训练器名称，如果不提供则使用类名
             
         Returns:
-            训练器类（用于装饰器模式）
+            训练器类（用于直接调用）或装饰器函数（用于带参数的装饰器用法）
         """
+        # 如果trainer_class为None，说明是作为带参数的装饰器使用
+        if trainer_class is None:
+            # 返回一个可以接受trainer_class的装饰器函数
+            def decorator(cls_to_register):
+                return cls.register(cls_to_register, namespace, name)
+            return decorator
+        
         # 确定训练器名称
         trainer_name = name if name else trainer_class.__name__
         

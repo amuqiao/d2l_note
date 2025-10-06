@@ -1,8 +1,18 @@
+import sys
+import os
+
+# 添加项目根目录到Python路径
+sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), '../../..')))
+
 import torch
 from src.model_center.trainer import BaseTrainer, ModelTrainerRegistry
 from src.model_center.model_registry import ModelRegistry
 from src.model_center.data_loader_registry import DataLoaderRegistry
+from src.model_center.config_registry import ConfigRegistry
 import logging
+
+# 导入mnist_example以使用其中注册的模型和数据集
+import src.model_center.examples.mnist_example
 
 # 配置日志
 logger = logging.getLogger(__name__)
@@ -348,27 +358,28 @@ import time
 from src.model_center.config_registry import ConfigRegistry
 
 # 注册配置模板，展示如何配置自定义训练器
-ConfigRegistry.register("mixed_precision_mnist", {
+ConfigRegistry.register_template("mixed_precision_mnist", {
     "model": {
-        "name": "SimpleCNN",
-        "namespace": "mnist"
+        "name": "simple_cnn",
+        "namespace": "mnist",
+        "type": "cnn"
     },
     "data": {
         "batch_size": 64,
-        "shuffle": true,
+        "shuffle": True,
         "num_workers": 4,
         "train_dataset": {
-            "name": "MNISTDataset",
-            "namespace": "mnist",
+            "name": "mnist",
+            "namespace": "datasets",
             "args": {
-                "train": true
+                "train": True
             }
         },
         "test_dataset": {
-            "name": "MNISTDataset",
-            "namespace": "mnist",
+            "name": "mnist",
+            "namespace": "datasets",
             "args": {
-                "train": false
+                "train": False
             }
         }
     },
@@ -387,7 +398,7 @@ ConfigRegistry.register("mixed_precision_mnist", {
             "name": "cross_entropy"
         },
         "mixed_precision": {
-            "enabled": true
+            "enabled": True
         }
     }
 })

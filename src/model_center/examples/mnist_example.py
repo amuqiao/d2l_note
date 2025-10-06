@@ -24,7 +24,7 @@ from src.model_center import ModelRegistry, DataLoaderRegistry, ConfigRegistry, 
 
 # ===================== 注册自定义模型 =====================
 
-@ModelRegistry.register(name="simple_cnn", namespace="mnist")
+@ModelRegistry.register(name="simple_cnn", namespace="mnist", type="cnn")
 class SimpleCNN(nn.Module):
     """简单的卷积神经网络模型，用于MNIST分类"""
     def __init__(self, num_classes: int = 10, dropout_rate: float = 0.5):
@@ -53,7 +53,7 @@ class SimpleCNN(nn.Module):
         return x
 
 
-@ModelRegistry.register(name="mlp", namespace="mnist")
+@ModelRegistry.register(name="mlp", namespace="mnist", type="mlp")
 class MLP(nn.Module):
     """多层感知器模型，用于MNIST分类"""
     def __init__(self, input_size: int = 28*28, hidden_size: int = 128, num_classes: int = 10, dropout_rate: float = 0.5):
@@ -120,6 +120,7 @@ ConfigRegistry.register_template("mnist_default", {
     "model": {
         "name": "simple_cnn",
         "namespace": "mnist",
+        "type": "cnn",
         "args": {
             "num_classes": 10,
             "dropout_rate": 0.5
@@ -179,6 +180,7 @@ ConfigRegistry.register_template("mnist_mlp", {
     "model": {
         "name": "mlp",
         "namespace": "mnist",
+        "type": "mlp",
         "args": {
             "input_size": 28*28,
             "hidden_size": 128,
