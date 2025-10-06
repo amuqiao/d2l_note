@@ -45,6 +45,18 @@ from src.model_center.data_loader_registry import DataLoaderRegistry
 from src.model_center.config_registry import ConfigRegistry
 from src.model_center.trainer import BaseTrainer, ModelTrainerRegistry
 
+# 导入统一注册入口和自动注册机制
+from src.model_center.model_registry_entry import (
+    # 统一注册入口便捷函数
+    create_model,
+    get_model_config,
+    get_all_registered_models,
+    is_model_registered,
+    
+    # 自动注册装饰器
+    register_model
+)
+
 # 导入便捷函数
 from src.model_center.trainer import create_default_trainer, train_model
 
@@ -67,7 +79,16 @@ __all__ = [
     "BaseTrainer",
     "ModelTrainerRegistry",
     
-    # 便捷函数
+    # 统一注册入口便捷函数
+    "create_model",
+    "get_model_config",
+    "get_all_registered_models",
+    "is_model_registered",
+    
+    # 自动注册装饰器
+    "register_model",
+    
+    # 原有便捷函数
     "create_default_trainer",
     "train_model",
     

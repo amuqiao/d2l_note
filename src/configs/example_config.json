@@ -1,0 +1,9 @@
+{
+    "experiment_name": "demo_experiment",
+    "log_dir": "./logs",
+    "checkpoint_dir": "./checkpoints",
+    "early_stopping": {
+        "patience": 10,
+        "monitor": "val_loss"
+    }
+}
