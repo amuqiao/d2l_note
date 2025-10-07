@@ -3,110 +3,48 @@
 下面是经过优化的解耦架构设计，通过清晰的分层结构和明确的接口边界，使各层之间实现松耦合，便于维护和扩展。
 
 ```mermaid
-graph TD
-    %% 定义样式类
-    classDef styleApp fill:#F9E79F,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
-    classDef styleCore fill:#A9DFBF,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
-    classDef styleModels fill:#81D4FA,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
-    classDef styleData fill:#FFCCBC,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
-    classDef styleUtils fill:#F8BBD0,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
-    classDef styleConfig fill:#D1C4E9,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
-    classDef styleRegistry fill:#BBDEFB,stroke:#333,stroke-width:2px,rx:8px,ry:8px;
-
-    %% 应用层
+flowchart TD
+    %% 简化样式（去掉圆角rx/ry，减少渲染负担）
+    classDef styleApp fill:#F9E79F,stroke:#333,stroke-width:2px;
+    classDef styleCore fill:#A9DFBF,stroke:#333,stroke-width:2px;
+    classDef styleRegistry fill:#BBDEFB,stroke:#333,stroke-width:2px;
+    classDef styleModels fill:#81D4FA,stroke:#333,stroke-width:2px;
+    classDef styleData fill:#FFCCBC,stroke:#333,stroke-width:2px;
+    classDef styleConfig fill:#D1C4E9,stroke:#333,stroke-width:2px;
+    
+    %% 应用层（简化标签，去掉<br>换行）
     subgraph 应用层
-        TrainScript[train.py<br>训练入口脚本]:::styleApp
-        PredictScript[predict.py<br>预测入口脚本]:::styleApp
-        Config[配置文件 YAML/JSON]:::styleConfig
+        main[main函数-应用入口]:::styleApp
     end
-
-    %% 核心功能层
+    
+    %% 核心层
     subgraph 核心功能层
-        Trainer[trainer.py<br>训练循环/优化器管理]:::styleCore
-        Predictor[predictor.py<br>预测推理]:::styleCore
+        Trainer[Trainer类-训练循环]:::styleCore
+        LeNetPredictor[LeNetPredictor类-预测推理]:::styleCore
     end
-
+    
     %% 注册中心层
     subgraph 注册中心层
-        ModelRegistry[model_registry.py<br>模型注册中心]:::styleRegistry
-        DataRegistry[data_registry.py<br>数据加载器注册中心]:::styleRegistry
+        ComponentRegistry[ComponentRegistry基类]:::styleRegistry
+        DataLoaderRegistry[DataLoaderRegistry]:::styleRegistry
+        ModelRegistry[ModelRegistry]:::styleRegistry
     end
-
-    %% 模型层
-    subgraph 模型层
-        Models[models<br>模型实现目录]:::styleModels
-        ClassificationModels[分类模型<br>ResNet/ViT/AlexNet]:::styleModels
-        RegressionModels[回归模型<br>MLP/FullyConnected]:::styleModels
-        CustomModels[自定义模型<br>用户实现]:::styleModels
-    end
-
-    %% 数据层
-    subgraph 数据层
-        DataLoaders[data_loaders<br>数据加载器目录]:::styleData
-        ImageDataloader[图像数据加载器<br>CIFAR/ImageNet]:::styleData
-        TextDataloader[文本数据加载器<br>TextCSV/TextLine]:::styleData
-        CustomDataloader[自定义数据加载器<br>用户实现]:::styleData
-    end
-
-    %% 工具层
-    subgraph 工具层
-        Utils[utils<br>工具类目录]:::styleUtils
-        OptimizerUtils[optimizer_utils.py<br>优化器配置]:::styleUtils
-        LossUtils[loss_utils.py<br>损失函数配置]:::styleUtils
-        Metric[metric.py<br>指标计算]:::styleUtils
-        Visualization[visualization.py<br>可视化工具]:::styleUtils
-        FileUtils[file_utils.py<br>文件操作工具]:::styleUtils
-        Logger[logger.py<br>日志管理]:::styleUtils
-    end
-
-    %% 应用层与核心功能层交互
-    TrainScript -->|解析配置| Config
-    TrainScript -->|调用| Trainer
-    PredictScript -->|调用| Predictor
-    Config -->|配置参数| Trainer
-    Config -->|配置参数| Predictor
-
-    %% 核心功能层与注册中心层交互
-    Trainer -->|请求模型| ModelRegistry
-    Trainer -->|请求数据| DataRegistry
-    Predictor -->|请求模型| ModelRegistry
-    Predictor -->|请求数据| DataRegistry
-    Config -->|注册信息| ModelRegistry
-    Config -->|注册信息| DataRegistry
-
-    %% 注册中心层与模型层交互
-    ModelRegistry -->|实例化| Models
-    Models -->|注册到| ModelRegistry
-    Models -->|包含| ClassificationModels
-    Models -->|包含| RegressionModels
-    Models -->|包含| CustomModels
-
-    %% 注册中心层与数据层交互
-    DataRegistry -->|实例化| DataLoaders
-    DataLoaders -->|注册到| DataRegistry
-    DataLoaders -->|包含| ImageDataloader
-    DataLoaders -->|包含| TextDataloader
-    DataLoaders -->|包含| CustomDataloader
-
-    %% 核心功能层与工具层交互
-    Trainer -->|使用| Utils
-    Predictor -->|使用| Utils
-
-    %% 工具层内部关系
-    Utils -->|包含| OptimizerUtils
-    Utils -->|包含| LossUtils
-    Utils -->|包含| Metric
-    Utils -->|包含| Visualization
-    Utils -->|包含| FileUtils
-    Utils -->|包含| Logger
-
-    %% 数据流向
-    DataLoaders -->|数据批次| DataRegistry
-    Models -->|模型实例| ModelRegistry
-    ModelRegistry -->|返回模型| Trainer
-    ModelRegistry -->|返回模型| Predictor
-    DataRegistry -->|返回数据| Trainer
-    DataRegistry -->|返回数据| Predictor
+    
+    %% 基础节点
+    LeNet[LeNet模型]:::styleModels
+    MNISTDataLoader[MNIST数据加载器]:::styleData
+    TrainingConfig[TrainingConfig配置]:::styleConfig
+    
+    %% 核心依赖（只保留关键连接，减少复杂度）
+    main --> DataLoaderRegistry
+    main --> ModelRegistry
+    main --> Trainer
+    main --> LeNetPredictor
+    
+    DataLoaderRegistry --> MNISTDataLoader
+    ModelRegistry --> LeNet
+    Trainer --> LeNet
+    LeNetPredictor --> LeNet
 ```
 
 
