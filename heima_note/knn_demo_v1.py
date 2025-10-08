@@ -7,11 +7,9 @@ from sklearn.metrics import classification_report, confusion_matrix
 from sklearn.preprocessing import StandardScaler
 from prettytable import PrettyTable
 
-# 导入项目中的matplotlib字体设置工具
-from src.helper_utils.matplotlib_tools import setup_matplotlib_font
-
 # 设置matplotlib字体，确保中文能正确显示
-setup_matplotlib_font()
+plt.rcParams["font.family"] = ["SimHei", "Microsoft YaHei"]
+plt.rcParams["axes.unicode_minus"] = False  # 正确显示负号
 
 # 1. 准备数据集
 # 电影数据：[打斗次数, 接吻次数, 类型标签(0=动作片, 1=爱情片)]

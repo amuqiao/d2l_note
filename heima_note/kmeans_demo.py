@@ -1,9 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import os
+import os
+# 设置环境变量以避免Windows上KMeans的内存泄漏警告
+os.environ['OMP_NUM_THREADS'] = '2'
 from sklearn.cluster import KMeans
 from sklearn.datasets import make_blobs
-from sklearn.metrics import silhouette_score, davies_bouldin_score
+from sklearn.metrics import silhouette_score, davies_bouldin_score, calinski_harabasz_score
 from sklearn.preprocessing import StandardScaler
 import random
 
@@ -107,10 +110,13 @@ simple_y_pred = simple_kmeans.predict(X_scaled)
 silhouette_avg = silhouette_score(X_scaled, y_pred)
 # 计算Davies-Bouldin指数
 db_score = davies_bouldin_score(X_scaled, y_pred)
+# 计算Calinski-Harabasz指数（方差比准则）
+ch_score = calinski_harabasz_score(X_scaled, y_pred)
 
 print("模型评估结果：")
 print(f"轮廓系数: {silhouette_avg:.4f}")
 print(f"Davies-Bouldin指数: {db_score:.4f}")
+print(f"Calinski-Harabasz指数: {ch_score:.4f}")  # 越高越好
 print(f"Sklearn KMeans 惯性值: {kmeans.inertia_:.4f}")
 print(f"自定义KMeans 惯性值: {simple_kmeans.inertia_:.4f}")
 
