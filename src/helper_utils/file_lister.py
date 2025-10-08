@@ -271,34 +271,43 @@ def print_file_info(file_info, verbose=False):
             print()  # 添加空行分隔不同目录
 
 def main():
-    # 设置命令行参数
-    parser = argparse.ArgumentParser(
-        description='递归解析目录下的文件，并按照目录输出文件名、类型和大小。详细模式下支持显示视频文件时长。',
-        formatter_class=argparse.RawTextHelpFormatter,
-        epilog='使用示例:\n'
-               '  列出指定目录下的所有文件(默认摘要模式): python file_lister.py /path/to/directory\n'
-               '  列出指定目录下的所有文件(详细模式): python file_lister.py /path/to/directory -v\n'
-               '  列出指定目录下的所有txt和py文件: python file_lister.py /path/to/directory -e txt py\n'
-               '  只列出指定目录下的文件，不包括子目录: python file_lister.py /path/to/directory -nr\n'
-               '注意: 显示视频时长需要安装opencv-python或ffmpeg'
-    )
+    print("==== 文件列表工具 ====")
+    print("该工具可以帮助您列出指定目录下的文件信息")
+    print("注意: 显示视频时长需要安装opencv-python或ffmpeg")
+    print()
     
-    parser.add_argument('path', help='目标目录路径')
-    parser.add_argument('-e', '--extensions', nargs='+', help='要筛选的文件后缀，多个后缀用空格分隔')
-    parser.add_argument('-nr', '--no-recursive', action='store_true', help='不递归遍历子目录')
-    parser.add_argument('-v', '--verbose', action='store_true', help='显示详细信息，包括文件类型和大小')
+    # 交互式获取参数
+    while True:
+        path = input("请输入目标目录路径: ").strip()
+        if path:
+            break
+        print("错误: 目录路径不能为空，请重新输入")
     
-    args = parser.parse_args()
+    # 获取文件后缀筛选（可选）
+    extensions_input = input("请输入要筛选的文件后缀（多个后缀用空格分隔，留空表示所有类型）: ").strip()
+    extensions = extensions_input.split() if extensions_input else None
+    
+    # 获取是否递归遍历子目录
+    recursive_input = input("是否递归遍历子目录？(y/n，默认y): ").strip().lower()
+    recursive = recursive_input != 'n'
+    
+    # 获取是否显示详细信息
+    verbose_input = input("是否显示详细信息？(y/n，默认y): ").strip().lower()
+    verbose = verbose_input != 'n'  # 默认显示详细信息，除非明确输入n
+    
+    print("\n正在处理...\n")
     
     # 列出文件并打印信息
     file_info = list_files(
-        path=args.path,
-        extensions=args.extensions,
-        recursive=not args.no_recursive
+        path=path,
+        extensions=extensions,
+        recursive=recursive
     )
     
     if file_info:
-        print_file_info(file_info, verbose=args.verbose)
+        print_file_info(file_info, verbose=verbose)
+    
+    print("\n操作完成！")
 
 if __name__ == "__main__":
     main()
