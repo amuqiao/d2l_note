@@ -3,3 +3,4 @@ pymysql==1.1.2
 jupyterlab==4.4.6
 seaborn==0.13.2
 imbalanced-learn==0.12.0
+graphviz==0.21
