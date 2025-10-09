@@ -9,7 +9,7 @@ from sklearn.preprocessing import OneHotEncoder, StandardScaler
 from sklearn.compose import ColumnTransformer
 from sklearn.pipeline import Pipeline
 from sklearn.tree import DecisionTreeClassifier
-from sklearn.metrics import accuracy_score, confusion_matrix, classification_report
+from sklearn.metrics import accuracy_score, confusion_matrix, classification_report, roc_curve, auc
 from sklearn.tree import plot_tree
 import graphviz
 from sklearn.tree import export_graphviz
@@ -40,7 +40,7 @@ df = df[features + [target]].dropna()
 
 # 划分特征和目标变量
 X = df[features]
-y = df[target]
+y = df[target].astype('int')  # 将目标变量转换为整数类型
 
 # 划分训练集和测试集
 X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -65,6 +65,7 @@ model.fit(X_train, y_train)
 
 # 模型预测
 y_pred = model.predict(X_test)
+y_prob = model.predict_proba(X_test)[:, 1]  # 生存概率
 
 # 模型评估
 print("\n模型评估结果：")
@@ -82,6 +83,46 @@ plt.show()
 
 print("\n分类报告：")
 print(classification_report(y_test, y_pred))
+
+# ROC曲线和AUC
+fpr, tpr, thresholds = roc_curve(y_test, y_prob)
+roc_auc = auc(fpr, tpr)
+
+plt.figure()
+plt.plot(fpr, tpr, color='darkorange', lw=2, label=f'ROC曲线 (面积 = {roc_auc:.2f})')
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
+plt.xlim([0.0, 1.0])
+plt.ylim([0.0, 1.05])
+plt.xlabel('假正例率')
+plt.ylabel('真正例率')
+plt.title('ROC曲线')
+plt.legend(loc="lower right")
+plt.show()
+
+# 特征重要性分析
+print("\n特征重要性分析：")
+# 获取特征名称
+numeric_features_processed = numeric_features
+categorical_features_processed = list(model.named_steps['preprocessor']
+                                      .named_transformers_['cat']
+                                      .get_feature_names_out(categorical_features))
+
+all_features = numeric_features_processed + categorical_features_processed
+
+# 获取特征重要性
+importances = model.named_steps['classifier'].feature_importances_
+
+# 排序并可视化
+feature_importance = pd.DataFrame({'特征': all_features, '重要性': importances})
+feature_importance = feature_importance.sort_values('重要性', ascending=False)
+
+print(feature_importance)
+
+plt.figure(figsize=(10, 6))
+sns.barplot(x='重要性', y='特征', data=feature_importance)
+plt.title('特征重要性')
+plt.tight_layout()
+plt.show()
 
 # 决策树可视化
 # 提取预处理后的特征名称
