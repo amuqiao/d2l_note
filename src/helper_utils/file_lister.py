@@ -308,6 +308,11 @@ def main():
         print_file_info(file_info, verbose=verbose)
     
     print("\n操作完成！")
+    input("按回车键退出...")  # 新增这一行
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        print(f"\n程序运行出错：{str(e)}")
+        input("按回车键退出...")  # 出错后也暂停，让用户看到错误
