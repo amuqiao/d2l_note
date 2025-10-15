@@ -1,14 +1,4 @@
-~ ~
-c c
-x x
-R M fb97c5c30132248e1Xd-09S9ElZRxY-5VvmbWOOhnPXRMxc~ R M
-X X
-P P
-n n
-h h
-O O
-O O
-W W
+
 b 高祥云 | NLP 算法工程师 b
 m m
 v v
@@ -149,61 +139,8 @@ f f
 Embedding微调：基于Bad Case挖掘业务场景下的难负例，微调bge-m3模型，精准识别“公
 司黑话”等领域术语，提升检索召回的精准度。
 LLM微调：利用高质量三元组对Qwen2.5进行指令微调，使生成内容更符合业务口吻。
-~
-c
-x
-M
-R
-X
-P
-n
-h
-O
-O
-W
-b
-m
-v
-V
-5
-Y-
-x
-R
-Z
-El
-9
-S
-9
-0
-d-
-X
-1
-e
-8
-4
-2
-2
-3
-1
-0
-3
-c
-5
-c
-7
-9
-b
-f
-~cxMRXPnhOOWbmvV5-YxRZlE9S90-dX1e84223103c5c79bf
-~ ~
-c c
-x x
-M M
-R R
-X X
-P P
-n n
-h h
+
+
 O 项目成果 O
 O O
 W W
@@ -339,61 +276,7 @@ f f
 实体 和 98 万条关系 的知识图谱，使用 Neo4j 实现可视化展示与高效查询。
 用户意图识别与语义槽填充 ： 使用 BERT 构建多任务分类器，支持 7 类审计意图识别（准确率
 98.78%）及关键槽位提取（如公司名、人名、时间范围），填充准确率达 97.62%。
-~
-c
-x
-M
-R
-X
-P
-n
-h
-O
-O
-W
-b
-m
-v
-V
-5
-Y-
-x
-R
-Z
-El
-9
-S
-9
-0
-d-
-X
-1
-e
-8
-4
-2
-2
-3
-1
-0
-3
-c
-5
-c
-7
-9
-b
-f
-~cxMRXPnhOOWbmvV5-YxRZlE9S90-dX1e84223103c5c79bf
-~ ~
-c c
-x x
-M M
-R R
-X X
-P P
-n n
-h h
+
 O O 模型性能优化与部署上线 ： 对 BERT 模型进行知识蒸馏（TextCNN 作为学生模型）和量化处理， O O
 W W
 m b 将整体推理延迟从 800ms 缩短至 250ms，采用 Flask + Docker 架构部署于 Linux 服务器 m b
@@ -436,11 +319,7 @@ f f
 载源数据表,计算保单的保费、现金价值、准备金等明细,提供给财务部门收费或支出,最后对保单汇
 总计算（业务发展类指标,成本费用类指标等）,并向业务人员做数据展示。
 技术栈 ~
-c
-x
-M
-R
-X
+
 Hadoop2.7.5、Hive2.1.0、Sqoop1.4P.7、SparkSQL2.4.5、Azkaban
 n
 h
@@ -453,9 +332,7 @@ v
 V
 5
 使用Sqoop同步各异构数Y据-源,到Hive数仓的ODS层。
-x
-R
-Z
+
 使用SparkSQL加载E保l单信息,计算保单的保费,使用复杂的UDAF函数等技术。
 9
 S
@@ -495,11 +372,7 @@ h h
 O O
 O O
 W 主要职能 W
-b b
-m m
-v v
-V V
-5 5
+
 Y- 参与商超新零售项目的环境搭建 Y-
 x x
 R R
@@ -530,227 +403,10 @@ f f
 自我评价
 技术驱动型工程师，擅长从底层逻辑出发解决问题，对 AI 新技术有强烈好奇心与学习能力。
 ~
-c
-x
-M
-R
-X
-P
-n
-h
-O
-O
-W
-b
-m
-v
-V
-5
-Y-
-x
-R
-Z
-El
-9
-S
-9
-0
-d-
-X
-1
-e
-8
-4
-2
-2
-3
-1
-0
-3
-c
-5
-c
-7
-9
-b
-f
-~cxMRXPnhOOWbmvV5-YxRZlE9S90-dX1e84223103c5c79bf
-~ ~
-c c
-x x
-M M
-R R
-X X
-P P
-n n
-h h
+
 O O 有韧性与执行力，曾完成 800 公里长途骑行，面对压力能保持冷静并持续突破。 O O
 W W
 b b
 v m 关注 AI 前沿发展，热爱分享与交流。 v m
-V V
-5 5
-Y- Y-
-x x
-R R
-Z Z
-El El
-9 9
-S S
-9 9
-0 0
-d- d-
-X X
-1 1
-e e
-8 8
-4 4
-2 2
-2 2
-3 3
-1 1
-0 0
-3 3
-c c
-5 5
-c c
-7 7
-9 9
-b b
-f f
-~
-c
-x
-M
-R
-X
-P
-n
-h
-O
-O
-W
-b
-m
-v
-V
-5
-Y-
-x
-R
-Z
-El
-9
-S
-9
-0
-d-
-X
-1
-e
-8
-4
-2
-2
-3
-1
-0
-3
-c
-5
-c
-7
-9
-b
-f
-~ ~
-c c
-x x
-M M
-R R
-X X
-P P
-n n
-h h
-O O
-O O
-W W
-b b
-m m
-v v
-V V
-5 5
-Y- Y-
-x x
-R R
-Z Z
-El El
-9 9
-S S
-9 9
-0 0
-d- d-
-X X
-1 1
-e e
-8 8
-4 4
-2 2
-2 2
-3 3
-1 1
-0 0
-3 3
-c c
-5 5
-c c
-7 7
-9 9
-b b
-f f
-~
-c
-x
-M
-R
-X
-P
-n
-h
-O
-O
-W
-b
-m
-v
-V
-5
-Y-
-x
-R
-Z
-El
-9
-S
-9
-0
-d-
-X
-1
-e
-8
-4
-2
-2
-3
-1
-0
-3
-c
-5
-c
-7
-9
-b
-f
-~cxMRXPnhOOWbmvV5-YxRZlE9S90-dX1e84223103c5c79bf
+
+

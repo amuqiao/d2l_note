@@ -7,6 +7,7 @@
 # 并比较两种模型的性能差异，展示集成学习的优势。
 
 ## 2. 导入依赖包
+import sys
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -18,9 +19,26 @@ from sklearn.ensemble import AdaBoostClassifier
 from sklearn.metrics import accuracy_score, classification_report, confusion_matrix
 from sklearn.model_selection import cross_val_score
 
-# 设置matplotlib字体，确保中文能正确显示
-plt.rcParams["font.family"] = ["SimHei", "Microsoft YaHei"]
-plt.rcParams["axes.unicode_minus"] = False  # 正确显示负号
+
+def setup_matplotlib_font():
+    """配置matplotlib中文显示
+    
+    该函数会根据不同操作系统设置合适的字体，确保中文能够正确显示。
+    支持Windows、macOS和Linux系统。
+    
+    Example:
+        >>> from src.helper_utils.font_utils import setup_matplotlib_font
+        >>> setup_matplotlib_font()  # 调用后，matplotlib将正确显示中文
+    """
+    if sys.platform.startswith("win"):
+        plt.rcParams["font.family"] = ["SimHei", "Microsoft YaHei"]
+    elif sys.platform.startswith("darwin"):
+        plt.rcParams["font.family"] = ["Arial Unicode MS", "Heiti TC"]
+    elif sys.platform.startswith("linux"):
+        plt.rcParams["font.family"] = ["Droid Sans Fallback", "DejaVu Sans", "sans-serif"]
+    plt.rcParams["axes.unicode_minus"] = False  # 正确显示负号
+    
+setup_matplotlib_font()
 
 ## 3. 获取数据
 # 加载葡萄酒数据集
