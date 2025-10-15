@@ -1,0 +1,123 @@
+
+王祥宇
+男 | 18025487176 | 625024108@qq.com
+4年工作经验 | 求职意向：AI工程师 | 期望城市：深圳
+
+个人介绍
+
+Ai agent全栈工程师，专注于 LLM、多智能体系统和 RAG 技术的开发。拥有扎实的智能体架构设计经验，熟练运用 LangGraph、CrewAI、AutoGen 等前沿智能体框架构建复杂系统。具备将 AI Agent 应用于医疗、金融和内容分析等垂直领域的实践经验，能够独立设计和实现完整的智能体解决方案。
+专业技能
+一、智能体与大模型技术
+• 智能体框架：LangGraph, CrewAI, Microsoft AutoGen, LangChain
+• 大语言模型：LLM 集成和应用，提示工程，工作流编排；深入理解 LLM 内部原理，包括全连接层、权重矩阵、自注意力机制和池化层结构；PyTorch 框架应用于 LLM 微调和部署
+• RAG 技术：Agentic RAG 架构，RecursiveCharacterTextSplitter 分块优化，向量化检索，元数据过滤，自动质量评估，混合记忆架构
+• 多模态应用：医学影像处理，多模态融合算法
+
+二、云原生与数据技术
+• 分布式推理：vLLM, Ray Framework，高性能模型部署
+• 数据存储：向量数据库(ChromaDB, MongoDB Atlas)，Redis 缓存
+• 后端开发：FastAPI, asyncio 异步编程，事件驱动架构
+• 前端开发：Vue, React 框架
+
+项目经历
+1. ai-memory-system
+AI 记忆增强系统（https://github.com/Wxysnx/ai-memory-system）
+独立开发 | 基于 LangGraph 的智能生成式 AI 记忆管理系统
+设计并实现了解决 Large Language Models (LLMs) 上下文限制问题的完整记忆管理系统，实现跨会话的长期记忆能力：
+• 设计 Hybrid Memory 架构，集成短期记忆(Redis)和长期记忆(MongoDB Vector Storage)
+• 开发基于 LangGraph 的 DAG Workflow Engine，实现复杂的记忆处理流程
+• 构建语义化记忆检索系统，实现基于上下文的智能记忆召回
+• 实现事件驱动架构，通过 Kafka 实现高性能、可扩展的 Event Bus，支持异步记忆处理
+• 利用 vLLM 和 Ray Framework 构建高性能分布式推理服务，支持大规模模型部署
+技术栈：LangGraph, LangChain, vLLM, Ray, Kubernetes, Docker, Kafka, MongoDB Atlas, Redis, FastAPI
+2. CTAnalyticsAgent
+CT 影像智能分析系统（https://github.com/Wxysnx/CTAnalyticsAgent）
+独立开发 | 基于多智能体协作的医学 CT 图像分析系统
+设计并实现了一个先进的医学 CT 图像分析系统，集成计算机视觉、自然语言处理和知识检索技术，为放射科医生提供智能辅助诊断工具：
+• 构建基于 CrewAI 的多智能体协作框架，包括影像分析师、医学研究员和放射科医师角色智能体
+• 开发 CT 图像自动分析模块，通过 BiomedCLIP 模型识别关键特征和异常
+• 实现基于 RAG 架构的医学知识库检索系统，提供诊断相关医学依据
+• 设计多智能体协同工作系统，将复杂的医学影像分析任务分解为专业子任务
+• 实现多模态融合算法，将图像数据与医学文本知识无缝结合
+技术栈：CrewAI, LangChain, BiomedCLIP, DICOM 处理, RAG 架构, ChromaDB, OpenAI API
+3. LangChain-RAG
+基于 LangChain 和 LangGraph 的 Agentic RAG 系统（https://github.com/Wxysnx/LangChain-RAG）
+独立开发 | 智能代理式检索增强生成系统
+设计并实现了一个智能化的 Agentic RAG 系统，能够根据问题复杂度和检索结果动态调整工作流程：
+• 开发完整的文档处理与索引模块，支持多种数据源的文档加载
+• 应用 LangGraph StateGraph 实现复杂的条件分支流程，根据检索结果质量动态决定下一步操作
+• 开发智能文档分块算法，通过 RecursiveCharacterTextSplitter 优化文本分割
+• 实现基于元数据的过滤检索，提高检索精度和效率
+• 设计自动评估与改进机制，在检索结果不理想时采取补救措施
+技术栈：LangChain, LangGraph StateGraph, OpenAI GPT, OpenAI Embeddings, Chroma DB
+4. AutoGenAgent
+AutoGen 网页内容摘要系统（https://github.com/Wxysnx/AutoGenAgent）
+独立开发 | 基于 Microsoft AutoGen 框架的多代理网页摘要系统
+
+设计并实现了一个企业级网页内容智能提取系统，利用 Microsoft AutoGen 框架构建多代理协作架构：
+• 构建基于 AutoGen 的多代理协作系统，包含网页获取、内容处理、摘要生成和摘要整合四个专业化代理
+• 设计无限页面处理机制，通过智能分块技术突破大语言模型上下文限制
+• 应用 AutoGen 框架实现复杂代理之间的消息传递和状态管理
+• 设计模块化代理工厂，简化代理创建和配置过程
+• 开发专用 DeepSeek API 客户端，优化大模型调用
+技术栈：Microsoft AutoGen, HTML 处理, DeepSeek API, 持久化存储
+5. CrewAI-StockAnalyst
+自动化股票分析智能体系统（https://github.com/Wxysnx/CrewAI-StockAnalyst）
+独立开发 | 基于 CrewAI 的多智能体股票分析系统
+设计并实现了一个利用多智能体协作进行自动化股票分析的高级工具，基于 CrewAI 框架构建专业智能体协作团队：
+• 构建基于 CrewAI 的多智能体协作系统，包含财务分析师、研究分析师和投资顾问三个专业智能体
+• 开发智能体工具集，实现 SEC EDGAR 数据分析、网络搜索与内容抓取功能
+• 设计高效的 SEC 文档语义搜索系统，实现对冗长财务文件的精确查询
+• 开发自适应研究算法，智能体能根据公司和行业自动调整研究方向和策略
+• 实现事件驱动架构，使用 CrewAI 的 Event System 实现精确的工作流程控制
+技术栈：CrewAI, SEC EDGAR 数据分析, 金融计算工具, DeepSeek
+6. LangGraphTinyAgent
+LangGraph 对话记忆管理系统（https://github.com/Wxysnx/LangGraphTinyAgent）
+独立开发 | 基于 LangGraph 的持久化对话代理
+设计并实现了一个基于 LangGraph 的对话代理系统，该系统具备持久化对话记忆管理能力：
+• 构建基于 LangGraph StateGraph 的对话管理系统，实现消息流和状态管理
+• 设计持久化对话记忆模块，保持对话上下文连贯性
+• 应用 LangGraph 的 StateGraph 构建有状态对话流，实现高效的消息处理和记忆管理
+• 设计模块化的系统架构，将状态定义、配置和图逻辑分离，提高代码可维护性
+• 与 LangSmith 集成，实现对话追踪和性能分析
+技术栈：LangGraph, Anthropic Claude, LangGraph Studio, LangSmith
+个人优势
+一、智能体系统专家
+• 精通 CrewAI、AutoGen 和 LangGraph 等前沿智能体框架
+• 具备复杂多代理协作系统设计与实现能力
+• 熟练掌握 State Graph 工作流和 Agentic RAG 架构设计
+• 在企业生产环境中成功构建、部署和运行多个智能体系统
+
+二、LLM 应用与优化专家
+• 深入理解大语言模型的内部原理与架构设计
+• 熟悉全连接层、权重矩阵、自注意力机制等核心组件
+• 擅长提示工程、Chain-of-Thought 推理和工作流编排
+• 熟练使用 PyTorch 框架进行 LLM 微调和优化
+三、垂直领域 AI 解决方案能力
+• 将 AI Agent 技术成功应用于医疗、金融和内容分析等领域
+• 具备多模态融合能力，将图像处理与文本处理结合
+• 能够设计和实现针对特定领域的智能体工具集
+
+四、完整系统架构能力
+• 精通记忆管理系统设计，包括短期与长期记忆协同工作机制
+• 熟练构建基于 Kubernetes 和 Docker 的云原生 AI 部署方案
+• 擅长设计事件驱动架构，实现高并发与可扩展的 AI 系统
+• 熟练掌握 Python 全栈开发，包括 FastAPI 后端框架
+• 具备 Vue 和 React 前端框架开发经验
+
+五、数据检索与知识管理能力
+• 深入理解 RAG 技术与向量数据库应用
+• 精通智能文档分块与语义检索技术
+• 能够构建复杂的知识库检索系统，实现高效信息获取
+
+六、快速原型开发能力
+• 熟练掌握 AI 辅助编程工具
+• 具备使用 AI 工具快速从 0 到 1 构建 MVP 版本的能力
+• 能高效实现复杂需求原型并快速迭代优化
+教育经历
+海南热带海洋学院 | 本科 | 电子信息工程(移动互联网应用方向)
+工作经历
+海口美亚卓越软件 | 后端开发
+海口奎迪互联科技 | 后端开发
+Swarms | AI Agent 工程师
+
