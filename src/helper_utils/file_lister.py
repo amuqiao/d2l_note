@@ -18,11 +18,17 @@ video_lib_name = ""
 # 尝试导入opencv
 try:
     import cv2
-    video_lib_available = True
-    video_lib_name = "opencv"
-    print("调试信息: opencv-python已成功导入")
+    # 检查cv2是否有VideoCapture属性
+    if hasattr(cv2, 'VideoCapture'):
+        video_lib_available = True
+        video_lib_name = "opencv"
+        print("调试信息: opencv-python已成功导入，VideoCapture可用")
+    else:
+        print("调试信息: opencv-python已导入，但缺少VideoCapture属性")
+        # 尝试检查ffprobe
+        raise ImportError("OpenCV缺少VideoCapture功能")
 except ImportError:
-    print("调试信息: opencv-python未安装")
+    print("调试信息: opencv-python未正确安装或缺少必要功能")
     
     # 检查ffprobe是否可用
     try:
@@ -63,6 +69,11 @@ def get_video_duration(file_path):
     
     try:
         if video_lib_name == "opencv":
+            # 再次检查cv2是否有VideoCapture属性，防止运行时错误
+            if not hasattr(cv2, 'VideoCapture'):
+                print(f"获取视频时长错误 '{file_path}': opencv模块缺少VideoCapture属性")
+                return "OpenCV功能缺失"
+            
             # 使用opencv获取时长
             cap = cv2.VideoCapture(file_path)
             if not cap.isOpened():
@@ -99,8 +110,9 @@ def get_video_duration(file_path):
                 return "获取失败"
                 
     except Exception as e:
+        # 捕获所有异常，但避免显示详细错误信息，只返回简单提示
         print(f"获取视频时长错误 '{file_path}': {str(e)}")
-        return f"错误"
+        return "获取失败"
 
 def list_files(path, extensions=None, recursive=True):
     """
