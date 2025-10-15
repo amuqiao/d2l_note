@@ -1,19 +1,6 @@
-~ ~
-c c
-x x
-R M 96e723c83b47541a1Xd-09i0ElNWw4S8U_OZWOOhnPXRMxc~ R M
-X X
-P P
-n n
-h h
+
 O O 王祥宇 O O
-W W
-Z Z
-O O
-_ _
-U U
-8 8
-S S
+
 4 男 18025487176 625024108@qq.com 4
 w w
 W W
@@ -104,62 +91,8 @@ AI 记忆增强系统（https://github.com/Wxysnx/ai-memory-system）
 实现事件驱动架构，通过 Kafka 实现高性能、可扩展的 Event Bus，支持异步记忆处理
 利用 vLLM 和 Ray Framework 构建高性能分布式推理服务，支持大规模模型部署
 技术栈：LangGraph, LangChain, vLLM, Ray, Kubernetes, Docker, Kafka, MongoDB Atlas, Redis, FastAPI
-~ ~
-c c
-x x
-M M
-R R
-X X
-P P
-n n
-h h
-O O
-O O
-W W
-Z Z
-O O
-_ _
-U U
-8 8
-S S
-4 4
-w w
-W W
-N N
-El El
-0 0
-9i 9i
-0 0
-d- d-
-X X
-1 1
-a a
-1 1
-4 4
-5 5
-7 7
-4 4
-b b
-3 3
-8 8
-c c
-3 3
-2 2
-7 7
-e e
-6 6
-9 9
-~cxMRXPnhOOWZO_U8S4wWNlE0i90-dX1a14574b38c327e69
-~ ~
-c c
-x x
-M M
-R R
-X X
-P P
-n n
-h h
-O O
+
+
 W O CTAnalyticsAgent W O
 Z Z
 O O
@@ -176,20 +109,9 @@ El El
 0 0
 d- d-
 X 设计并实现了一个先进的医学 CT 图像分析系统，集成计算机视觉、自然语言处理和知识检索技术，为X放射科医生提供智能辅助诊
-1 1
-a a
-1 1
-4 4
+
 5 断工具： 5
-7 7
-4 4
-b b
-3 3
-8 8
-c c
-3 3
-2 2
-7 7
+
 6 e 构建基于 CrewAI 的多智能体协作框架，包括影像分析师、医学研究员和放射科医师6角e色智能体
 9 9
 开发 CT 图像自动分析模块，通过 BiomedCLIP 模型识别关键特征和异常
@@ -252,58 +174,7 @@ e
 CrewAI-StockAnalyst
 自动化股票分析智能体系统（https://github.com/Wxysnx/CrewAI-StockAnalyst）
 独立开发 | 基于 CrewAI 的多智能体股票分析系统
-~ ~
-c c
-x x
-M M
-R R
-X X
-P P
-n n
-h h
-O O
-O O
-W W
-Z Z
-O O
-_ _
-U U
-8 8
-S S
-4 4
-w w
-W W
-N N
-El El
-0 0
-9i 9i
-0 0
-d- d-
-X X
-1 1
-a a
-1 1
-4 4
-5 5
-7 7
-4 4
-b b
-3 3
-8 8
-c c
-3 3
-2 2
-7 7
-e e
-6 6
-9 9
-~cxMRXPnhOOWZO_U8S4wWNlE0i90-dX1a14574b38c327e69
-~ ~
-c c
-x x
-M M
-R R
-X X
+
 n P 设计并实现了一个利用多智能体协作进行自动化股票分析的高级工具，基于 CrewAI 框架构建专业智能体协作团队： n P
 h h
 O O
@@ -377,82 +248,7 @@ N
 El
 0
 9i
-0
-d-
-X
-1
-a
-1
-4
-5
-7
-4
-b
-3
-8
-c
-3
-2
-7
-e
-6
-9
-~ ~
-c c
-x x
-M M
-R R
-X X
-P P
-n n
-h h
-O O
-O O
-W W
-Z Z
-O O
-_ _
-U U
-8 8
-S S
-4 4
-w w
-W W
-N N
-El El
-0 0
-9i 9i
-0 0
-d- d-
-X X
-1 1
-a a
-1 1
-4 4
-5 5
-7 7
-4 4
-b b
-3 3
-8 8
-c c
-3 3
-2 2
-7 7
-e e
-6 6
-9 9
-~cxMRXPnhOOWZO_U8S4wWNlE0i90-dX1a14574b38c327e69
-~ ~
-c c
-x x
-M M
-R R
-X X
-n P AI Agent 架构设计专家： n P
-h h
-O O
-O O
+
 W 精通 CrewAI、AutoGen 和 LangGraph 等前沿智能体框架 W
 Z Z
 O O
@@ -539,57 +335,7 @@ e
 海南热带海洋学院 本科 电子信息工程(移动互联网应用方向)
 工作经历
 海口美亚卓越软件 后端开发
-~ ~
-c c
-x x
-M M
-R R
-X X
-P P
-n n
-h h
-O O
-O O
-W W
-Z Z
-O O
-_ _
-U U
-8 8
-S S
-4 4
-w w
-W W
-N N
-El El
-0 0
-9i 9i
-0 0
-d- d-
-X X
-1 1
-a a
-1 1
-4 4
-5 5
-7 7
-4 4
-b b
-3 3
-8 8
-c c
-3 3
-2 2
-7 7
-e e
-6 6
-9 9
-~cxMRXPnhOOWZO_U8S4wWNlE0i90-dX1a14574b38c327e69
-~ ~
-c c
-x x
-M M
-R R
+
 X X
 n P 海口奎迪互联科技 后端开发 n P
 h h
@@ -600,122 +346,4 @@ Z Z
 O O
 _ _
 8 U Swarms ai agent 工程师 8 U
-S S
-4 4
-w w
-W W
-N N
-El El
-0 0
-9i 9i
-0 0
-d- d-
-X X
-1 1
-a a
-1 1
-4 4
-5 5
-7 7
-4 4
-b b
-3 3
-8 8
-c c
-3 3
-2 2
-7 7
-e e
-6 6
-9 9
-~
-c
-x
-M
-R
-X
-P
-n
-h
-O
-O
-W
-Z
-O
-_
-U
-8
-S
-4
-w
-W
-N
-El
-0
-9i
-0
-d-
-X
-1
-a
-1
-4
-5
-7
-4
-b
-3
-8
-c
-3
-2
-7
-e
-6
-9
-~ ~
-c c
-x x
-M M
-R R
-X X
-P P
-n n
-h h
-O O
-O O
-W W
-Z Z
-O O
-_ _
-U U
-8 8
-S S
-4 4
-w w
-W W
-N N
-El El
-0 0
-9i 9i
-0 0
-d- d-
-X X
-1 1
-a a
-1 1
-4 4
-5 5
-7 7
-4 4
-b b
-3 3
-8 8
-c c
-3 3
-2 2
-7 7
-e e
-6 6
-9 9
-~cxMRXPnhOOWZO_U8S4wWNlE0i90-dX1a14574b38c327e69
+
