@@ -1,11 +1,12 @@
 # 忽略数据目录
-data/
+/data/
 /runs/
 /runs2/
 /timestride/
 
 /logs/*
 /test/*
+/checkpoints/*
 
 # 忽略VS Code配置文件
 .vscode/

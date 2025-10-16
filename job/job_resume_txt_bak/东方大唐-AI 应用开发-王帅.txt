@@ -1,0 +1,183 @@
+hl hl
+h h
+P P
+Q e3567ecfbd430c241Xd-3NW6F1dUwYu8UPibWOGqmf7QPhhl Q
+7 7
+mf mf
+q q
+G G
+O 王帅 O
+W W
+b b
+Pi Pi
+U U
+8 8
+u u
+Y Y
+w w
+U U
+d d
+1 1
+F F
+6 6
+W W
+N N
+3 3
+d- d-
+1 X 基本信息 1 X
+4 4
+2 2
+c c
+0 0
+3 3
+4 姓 名：王帅 电 话：15928682059 邮 箱：jcanha1@foxmail.com 4
+d d
+b b
+cf cf
+e e
+7 教育背景 7
+6 6
+5 5
+3 3
+e e
+2020.10-2024.07 西南民族大学 人工智能专业
+英语四级
+技能 能力
+⚫ 编程语言: Python 熟练掌握 Numpy、Pandas、Pytorch、Opencv、NLTK、spaCy 等常用 Python 框架和库。
+⚫ 开发环境: 熟练掌握 Linux 下 Python、 Al 项目的开发与环境配置部署。
+⚫ AI 开发:
+hl
+h
+◼ 熟悉 ResNet 等常见深度学习模型及 TransfQoPrmer 架构。
+7
+◼ 熟练掌握 LlamaIndex、Langchain 框架m， f 精通 RAG、Agent 工程实践，熟悉function calling、MCP等技术。
+q
+G
+O
+◼ 精通 Prompt Engineering，熟悉 CWoT 等技术以提升大模型性能与稳定性。
+b
+◼ 具备 LLM
+Fine-tuning、性能测U试Pi
+与评估经验。
+8
+u
+◼ 熟悉 AWS Bedrock、AzuwreY AI、Vertex AI 等云平台，熟练调用 Anthropic、Gemini、OpenAI 等模型 API。
+U
+d
+1
+F
+开发工具 6
+W
+N
+3
+d-
+⚫ 熟练使用 VScode、XCursor、Poetry、Github 等代码开发管理工具。
+1
+4
+2
+c
+0
+工作经历 3
+4
+d
+b
+cf
+e
+2024.7-206274.9 元数智慧科技有限公司 Python后端开发
+5
+3
+e
+工作内容：根据公司业务部门的需求，搭建知识图谱、构建 Agent
+⚫ 根据业务需求构建知识图谱及 Agent。
+⚫ 基于 LlamaIndex 与 RAG 技术搭建智能客服系统，实现了长记忆、多用户并行及持续学习功能。
+⚫ 运用 Prompt Engineering (含CoT) 深度挖掘大模型潜力，优化模型输出与外部API调用稳定性。
+2024.9-至今 思维巡航（深圳）网络技术有限公司 AI应用开发工程师
+⚫ 负责根据企业用户需求定制与优化AI模板。
+⚫ 主导通过 Fine-tuning 低性能LLM及应用结构化输出技术，在保证业务效果的同时，成功降低了95%的模型成本。
+hl hl
+P h ⚫ 持续跟踪前沿LLM技术并推动业务迭代，开发自动化测试工具，从多维度评估LLM在具体业务场景下的性能。 P h
+Q Q
+7 7
+mf ⚫ 通过多源异构数据融合与多路召回策略协同优化，提升AI Chat的上下文理解能力和生成内容的准确性、丰富度。 mf
+q q
+G G
+O O
+W 项目经历 W
+b b
+Pi Pi
+U U
+u 8 ⚫ 项目1: 智能客服助理，基于LlamaIndex与Ollama，使用RAG和FunctionCalling技术搭建智能客服助理，u通8过提示
+Y Y
+w w
+U 工程赋予角色身份实现情感对话，并拥有长记忆功能可实现多轮对话，通过混合向量检索以及关键词检索，U使效率更高。
+d d
+1 1
+F F
+W 6 使用CoT技术，使模型可以自主思考、调用外部API更稳定。 W 6
+N N
+d- 3 ⚫ 项目2：实现了基于 LLM 的语音响应，并利用实时 API 显著降低了端到端语音交互延迟。 d- 3
+X X
+1 1
+2 4 ⚫ 项目3：利用多模态模型进行视频理解，实现通过上传视频或录屏自动生成文档和分析关键帧2 4。
+c c
+0 0
+4 3 ⚫ 项目4：搭建智能化 LLM 测评框架，构建多维度评估基准体系，实现模型性能的快速量4 3化测评与动态追新。
+d d
+b b
+e
+cf
+自我评价 e
+cf
+7 7
+6 6
+5 5
+e 3 ⚫ 具备强烈的责任心、敬业精神、优秀的团队协作与沟通能力。 e 3
+⚫ 拥有扎实的数据分析与处理能力，以及出色的持续学习和快速适应能力，能高效投入新领域并执行任务。
+⚫ 熟悉Transformer架构及PyTorch框架，对AI技术抱有浓厚兴趣，并积极进行前沿模型（如Anthropic、Gemini、OpenAI
+等）的追踪、评测与学习。
+⚫ 具备AI应用开发及LLM优化、评估的实践经验，熟悉主流云AI平台（AWS Bedrock, Azure AI, Vertex AI）的API调
+用，致力于通过技术解决实际问题并创造价值。
+hl
+h
+P
+Q
+7
+mf
+q
+G
+O
+W
+b
+Pi
+U
+8
+u
+Y
+w
+U
+d
+1
+F
+6
+W
+N
+3
+d-
+X
+1
+4
+2
+c
+0
+3
+4
+d
+b
+cf
+e
+7
+6
+5
+3
+e
+lhhPQ7fmqGOWbiPU8uYwUd1F6WN3-dX142c034dbfce7653e
