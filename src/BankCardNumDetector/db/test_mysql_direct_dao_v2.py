@@ -5,6 +5,13 @@ MySQL数据库查询脚本（改进版）
 
 功能：使用pymysql库连接MySQL数据库并执行指定查询
 特点：
+
+v2版本 ：采用继承式设计
+
+- DatabaseConnection ：实现上下文管理器接口
+- BaseService ：基础服务类，封装通用数据库操作
+- RentQueryService ：继承自 BaseService ，专注于业务逻辑
+
 - 自动管理数据库连接，无需手动创建和关闭
 - 采用上下文管理器模式，确保资源正确释放
 - 支持参数化查询，提高安全性
@@ -69,23 +76,31 @@ class BaseService:
         self.db_config = db_config
 
     @contextmanager
-    def get_cursor(self):
-        """获取数据库游标上下文管理器，自动处理连接和游标生命周期"""
+    def get_cursor(self, cursor_class=pymysql.cursors.DictCursor):
+        """获取数据库游标上下文管理器，自动处理连接和游标生命周期
+        
+        Args:
+            cursor_class: 游标的类型，默认为DictCursor，可以返回字典格式的结果
+        """
         with DatabaseConnection(self.db_config) as db:
-            with db.connection.cursor() as cursor:
+            with db.connection.cursor(cursor=cursor_class) as cursor:
                 yield cursor
 
-    def execute_query(self, sql, params=None):
-        """执行查询并返回字典格式的结果"""
+    def execute_query(self, sql, params=None, cursor_class=pymysql.cursors.DictCursor):
+        """执行查询并返回结果
+        
+        Args:
+            sql: SQL查询语句
+            params: 查询参数，用于参数化查询
+            cursor_class: 游标的类型，默认为DictCursor，返回字典格式的结果
+        
+        Returns:
+            查询结果列表，如果出错则返回None
+        """
         try:
-            with self.get_cursor() as cursor:
+            with self.get_cursor(cursor_class=cursor_class) as cursor:
                 cursor.execute(sql, params or ())
-                # 获取列名
-                columns = [desc[0] for desc in cursor.description]
-                # 获取结果并转换为字典列表
-                result = []
-                for row in cursor.fetchall():
-                    result.append(dict(zip(columns, row)))
+                result = cursor.fetchall()
                 logger.info(f"查询结果数量: {len(result)}")
                 return result
         except Error as e:

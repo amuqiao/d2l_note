@@ -5,6 +5,12 @@ MySQL数据库查询脚本
 
 功能：使用pymysql库连接MySQL数据库并执行指定查询
 特点：
+v1版本 ：采用三层类结构
+
+- DatabaseConnection ：负责数据库连接的创建和关闭
+- QueryExecutor ：负责执行SQL查询
+- RentQueryService ：封装特定业务查询
+
 - 采用类结构封装，分离连接管理和查询执行
 - 支持参数化查询，提高安全性
 - 结构化日志输出，便于调试和监控
