@@ -1,4 +1,8 @@
 import os
+<<<<<<< HEAD
+import argparse
+=======
+>>>>>>> 6aa72b917f69d7a6ada7367f0b67232cc73df030
 import sys
 
 def rename_files(directory, target, replacement, recursive=False, dry_run=False):
@@ -43,6 +47,47 @@ def rename_files(directory, target, replacement, recursive=False, dry_run=False)
                         print(f"重命名失败 '{entry}': {str(e)}", file=sys.stderr)
 
 def main():
+<<<<<<< HEAD
+    # 设置命令行参数解析
+    parser = argparse.ArgumentParser(
+        description='替换目录下文件名中的指定内容',
+        formatter_class=argparse.RawDescriptionHelpFormatter,
+        epilog='''\
+使用示例:
+  # 在当前目录下，将所有文件名中的 'old' 替换为 'new'
+  python filename_replacer.py . old new
+  
+  # 递归处理所有子目录
+  python filename_replacer.py . old new -r
+  
+  # 仅显示将要执行的操作，不实际修改文件
+  python filename_replacer.py . old new -n
+  
+  # 结合递归和模拟运行
+  python filename_replacer.py . old new -r -n
+        ''')
+    parser.add_argument('directory', help='目标目录路径')
+    parser.add_argument('target', help='需要替换的内容')
+    parser.add_argument('replacement', help='替换内容')
+    parser.add_argument('-r', '--recursive', action='store_true', 
+                       help='递归处理子目录中的文件')
+    parser.add_argument('-n', '--dry-run', action='store_true',
+                       help='仅显示将要执行的操作，不实际重命名文件')
+    
+    # 解析命令行参数
+    args = parser.parse_args()
+    
+    # 显示操作信息
+    print(f"在目录 '{args.directory}' 中")
+    print(f"将文件名中的 '{args.target}' 替换为 '{args.replacement}'")
+    if args.recursive:
+        print("将递归处理所有子目录")
+    if args.dry_run:
+        print("这是一个模拟运行，不会实际修改文件")
+    
+    # 确认操作
+    if not args.dry_run:
+=======
     print("==== 文件名替换工具 ====")
     print("该工具可以帮助您替换指定目录下文件名中的特定内容")
     print()
@@ -84,11 +129,20 @@ def main():
     
     # 确认操作
     if not dry_run:
+>>>>>>> 6aa72b917f69d7a6ada7367f0b67232cc73df030
         confirm = input("是否继续? (y/n) ")
         if confirm.lower() not in ['y', 'yes']:
             print("操作已取消")
             return
     
+<<<<<<< HEAD
+    # 调用重命名函数
+    rename_files(args.directory, args.target, args.replacement, 
+                args.recursive, args.dry_run)
+
+if __name__ == "__main__":
+    main()
+=======
     # 调用重命名函数进行模拟运行或实际运行
     rename_files(directory, target, replacement, recursive, dry_run)
     
@@ -109,3 +163,4 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"\n程序运行出错：{str(e)}")
         input("按回车键退出...")  # 出错后也暂停，让用户看到错误
+>>>>>>> 6aa72b917f69d7a6ada7367f0b67232cc73df030

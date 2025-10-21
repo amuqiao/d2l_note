@@ -5,15 +5,26 @@ MySQL数据库查询脚本（改进版）
 
 功能：使用pymysql库连接MySQL数据库并执行指定查询
 特点：
+
+v2版本 ：采用继承式设计
+
+- DatabaseConnection ：实现上下文管理器接口
+- BaseService ：基础服务类，封装通用数据库操作
+- RentQueryService ：继承自 BaseService ，专注于业务逻辑
+
 - 自动管理数据库连接，无需手动创建和关闭
 - 采用上下文管理器模式，确保资源正确释放
 - 支持参数化查询，提高安全性
 - 结构化日志输出，便于调试和监控
+- 支持将查询结果导出到CSV文件
 """
 import pymysql
 from pymysql import Error
 import logging
 from contextlib import contextmanager
+import csv
+import os
+from datetime import datetime
 
 # 配置日志
 logging.basicConfig(
@@ -65,16 +76,29 @@ class BaseService:
         self.db_config = db_config
 
     @contextmanager
-    def get_cursor(self):
-        """获取数据库游标上下文管理器，自动处理连接和游标生命周期"""
+    def get_cursor(self, cursor_class=pymysql.cursors.DictCursor):
+        """获取数据库游标上下文管理器，自动处理连接和游标生命周期
+        
+        Args:
+            cursor_class: 游标的类型，默认为DictCursor，可以返回字典格式的结果
+        """
         with DatabaseConnection(self.db_config) as db:
-            with db.connection.cursor() as cursor:
+            with db.connection.cursor(cursor=cursor_class) as cursor:
                 yield cursor
 
-    def execute_query(self, sql, params=None):
-        """执行查询并返回结果"""
+    def execute_query(self, sql, params=None, cursor_class=pymysql.cursors.DictCursor):
+        """执行查询并返回结果
+        
+        Args:
+            sql: SQL查询语句
+            params: 查询参数，用于参数化查询
+            cursor_class: 游标的类型，默认为DictCursor，返回字典格式的结果
+        
+        Returns:
+            查询结果列表，如果出错则返回None
+        """
         try:
-            with self.get_cursor() as cursor:
+            with self.get_cursor(cursor_class=cursor_class) as cursor:
                 cursor.execute(sql, params or ())
                 result = cursor.fetchall()
                 logger.info(f"查询结果数量: {len(result)}")
@@ -118,7 +142,7 @@ class RentQueryService(BaseService):
         """
         if not task_ids:
             logger.warning("任务ID列表为空，无需查询")
-            return {}
+            return []
             
         logger.info(f"\n正在批量查询{len(task_ids)}个task_id")
         
@@ -129,28 +153,89 @@ class RentQueryService(BaseService):
         # 执行一次SQL查询获取所有结果
         result = self.execute_query(sql, task_ids)
         
-        # 将结果按task_id分组
-        all_results = {task_id: [] for task_id in task_ids}
-        top_5_results = []
+        processed_results = []
         
         if result:
             for row in result:
-                # 最后一个字段是task_id
-                task_id = row[-1]
-                # 移除最后一个task_id字段，保持原有数据结构
-                cleaned_row = row[:-1]
-                all_results[task_id].append(cleaned_row)
+                # 创建一个新的字典来存储处理后的数据
+                processed_row = row.copy()
                 
-                # 收集前5条结果
-                if len(top_5_results) < 5:
-                    top_5_results.append(cleaned_row)
-            
-            # 打印前5行结果
-            logger.info(f"\n查询结果示例(前5条):")
-            for i, row in enumerate(top_5_results):
-                logger.info(f"  记录{i+1}: {row}")
+                # 处理picture_card_frontal字段
+                picture_card_frontal = processed_row.get('picture_card_frontal')
+                if picture_card_frontal and isinstance(picture_card_frontal, str):
+                    # 截断///后面的部分
+                    if '///' in picture_card_frontal:
+                        truncated_part = picture_card_frontal.split('///')[0]
+                        # 拼接前缀
+                        processed_row['picture_card_frontal'] = f"https://xuntian-pv.tcl.com/{truncated_part}"
+                    else:
+                        # 如果没有///，直接拼接前缀
+                        processed_row['picture_card_frontal'] = f"https://xuntian-pv.tcl.com/{picture_card_frontal}"
+                
+                processed_results.append(processed_row)
+
+        return processed_results
+
+
+def save_results_to_csv(results, output_dir='.', file_name=None):
+    """
+    将查询结果保存到CSV文件
+    
+    参数:
+    - results: 查询结果列表
+    - output_dir: 输出目录，默认为当前目录
+    - file_name: 文件名，默认为None（将自动生成包含时间戳的文件名）
+    
+    返回:
+    - 保存的文件路径
+    """
+    if not results:
+        logger.warning("结果为空，无需保存到CSV")
+        return None
+    
+    # 确保输出目录存在
+    os.makedirs(output_dir, exist_ok=True)
+    
+    # 如果未提供文件名，则生成包含时间戳的文件名
+    if file_name is None:
+        timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+        file_name = f"bank_card_query_result_{timestamp}.csv"
+    
+    # 完整文件路径
+    file_path = os.path.join(output_dir, file_name)
+    
+    try:
+        # 获取所有字段名，并确保重要字段排在前面
+        first_row = results[0]
+        all_fields = list(first_row.keys())
         
-        return all_results
+        # 定义需要排在前面的字段
+        priority_fields = ['task_id', 'new_card_number', 'picture_card_frontal']
+        
+        # 构建排好序的字段列表：重要字段在前，其余字段按原顺序排列
+        sorted_fields = []
+        for field in priority_fields:
+            if field in all_fields:
+                sorted_fields.append(field)
+                all_fields.remove(field)
+        sorted_fields.extend(all_fields)
+        
+        # 写入CSV文件
+        with open(file_path, 'w', newline='', encoding='utf-8') as csvfile:
+            writer = csv.DictWriter(csvfile, fieldnames=sorted_fields)
+            
+            # 写入表头
+            writer.writeheader()
+            
+            # 写入数据
+            for row in results:
+                writer.writerow(row)
+        
+        logger.info(f"查询结果已成功保存到CSV文件: {file_path}")
+        return file_path
+    except Exception as e:
+        logger.error(f"保存CSV文件时发生错误: {e}")
+        return None
 
 
 def main():
@@ -171,7 +256,26 @@ def main():
         "ZJ2025060516080248",
         "ZJ2025052211110160",
         "ZJ2025060516090296",
-        # 可以继续添加更多task_id...
+        "ZJ2025060516080245",
+        "ZJ2025012112120014",
+        "ZJ2025060618510204",
+        "ZJ2025060516100318",
+        "ZJ2025060618480067",
+        "ZJ2025060516040121",
+        "ZJ2025060516100329",
+        "ZJ2025060618520245",
+        "ZJ2025060618510174",
+        "ZJ2025060618500150",
+        "ZJ2025060618500151",
+        "ZJ2025060618510187",
+        "ZJ2025051411030035",
+        "ZJ2025060516030090",
+        "ZJ2025060516070218",
+        "ZJ2025060516070207",
+        "ZJ2025060516110337",
+        "ZJ2025060516090263",
+        "ZJ2025060516100316",
+        "ZJ2025060516020036",
     ]
 
     # 创建查询服务实例（用户只需要关心这里）
@@ -180,8 +284,18 @@ def main():
     # 执行查询（用户只需要调用服务方法）
     results = rent_service.batch_query_by_task_ids(task_ids)
     
-    # 可以在这里处理查询结果
-    # ...
+    # 打印所有查询结果
+    logger.info(f"\n查询结果总数: {len(results)}")
+    print(results)
+        
+    # 将结果保存到CSV文件（默认保存在当前目录）
+    csv_file_path = save_results_to_csv(results)
+    
+    # 如果需要指定目录，可以使用如下方式：
+    # csv_file_path = save_results_to_csv(results, output_dir='/path/to/directory')
+    
+    if csv_file_path:
+        logger.info(f"CSV文件已保存至: {csv_file_path}")
 
 
 if __name__ == "__main__":
