@@ -188,6 +188,8 @@ def print_file_info(file_info, verbose=False):
     """使用PrettyTable打印文件信息，包含汇总行"""
     for directory, files in file_info.items():
         if files:  # 只打印有符合条件文件的目录
+            # 按照文件名排序
+            files.sort(key=lambda x: x['name'])
             print(f"\n目录: {directory}")
             print("=" * (len(directory) + 4))
             
