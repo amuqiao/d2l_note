@@ -4,16 +4,18 @@
 男 | 年龄：31岁 | 17600654715 | 978210873@qq.com
 9年工作经验 | 求职意向：算法工程师 | 期望城市：深圳
 个人优势
-精通Python及面向对象编程，熟悉设计模式，了解高并发系统设计调优，持有CCIE思科认证互联网专家证书
-熟练运用Django、Tornado、Flask、FastAPI等Web框架进行开发
-熟悉MySQL、Redis、Oracle、Neo4j、InfluxDB、Prometheus等多类型数据库
-掌握机器学习/深度学习（SVM、LSTM、Transformer、RNN、CNN、GNN等）；
-熟练PyTorch、BERT、TimesNet、Informer时序模型等
-熟悉LangChain、RAG、AI Agent、LLM、Agent、多模态等技术，
-熟悉YOLO、OpenCV、OCR图像识别技术
-熟练掌握Linux生产环境搭建调优、Docker/K8s容器技术，熟悉AWS云服务
-熟练使用PySpark、NumPy、Pandas进行数据处理，了解数据清洗、Scrapy爬虫技术
-了解HTML/CSS/JavaScript/Vue前端技术，英文读写流畅
+● **编程开发能力**：精通Python及面向对象编程，熟悉设计模式，持有CCIE思科认证互联网专家证书
+● **Web框架经验**：熟练运用Django、Tornado、Flask、FastAPI等Web框架进行开发
+● **数据库技术**：熟悉MySQL、Redis、Oracle、Neo4j、InfluxDB、Prometheus等多类型数据库
+● **AI/ML技术栈**：
+  - 深度学习：熟悉PyTorch、神经网络算法（Transformer、BERT、CNN、RNN等）
+  - 大语言模型：具备LLM应用开发经验，熟悉提示工程优化策略
+  - 检索增强生成：熟练掌握RAG技术，能构建高质量知识库与语义检索系统
+  - 多代理架构：了解多代理LLM架构设计，具备代理编排、内存共享和工具调用工作流程设计经验
+● **计算机视觉**：熟悉OpenCV、OCR、YOLO、DETR、DeformableDetr等目标检测算法
+● **运维部署**：熟练掌握Linux、Docker/K8s、华为云等服务部署与优化
+● **智能客服专长**：设计微服务化客服平台架构，拆分问答引擎、OCR解析、任务调度、知识图谱4大核心组件，支持高并发业务场景；开发智能对话管理系统，实现会话状态管理、上下文理解、多轮对话维护及智能澄清提问逻辑；具备智能客服系统与现有业务流程集成经验，熟悉会话管理、人工转接等核心功能，成功支撑日均10万+客服请求，人工客服工作量减少60%
+● **语言能力**：CET-4，英文读写流畅
 工作经历
 深圳东方大唐信息技术有限公司 ai算法工程师 2024.03-至今
 TCL光伏科技项目，主导光伏行业 AI 技术落地，负责时序预测、计算机视觉、智能客服三大方向核心项目，推动业务自动化率提
